@@ -21,11 +21,12 @@ public class LoginService {
 
 			User user = findUser(username, password);
 			if(user != null) {
-				System.out.println("Welcome " +  user.getUsername() + "!");
+				System.out.println("\n\u001B[32mLogin successful!\u001B[0m");
+				System.out.println("\nWelcome " +  user.getUsername() + "!");
 				return user;
 			}
 			else {
-				System.out.println("Invalid credentials! Try again.\n");
+				System.out.println("\u001B[31mInvalid credentials! Try again.\n\u001B[0m");
 			}
 
 		}
