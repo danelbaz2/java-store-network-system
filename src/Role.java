@@ -1,6 +1,6 @@
 
 public enum Role {
-
-	ADMIN,
-	REGULAR
+	MANAGER,
+	CASHIER,
+	SELLER
 }

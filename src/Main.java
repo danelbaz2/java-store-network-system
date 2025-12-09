@@ -1,18 +1,14 @@
-import java.io.FileNotFoundException;
-import java.util.List;
 
 public class Main {
 
-	public static void main(String[] args) throws FileNotFoundException {
-		
-		UserRepository userRepo = new FilerUserRepository("users.txt");
-		List<User> users = userRepo.loadUsers();	
-		
-		LoginService LoginService = new LoginService(users);
-		User loggedInUser = LoginService.login();
-		
-		MenuManager menuManager = new MenuManager();
-		menuManager.showMenuFor(loggedInUser);
+	public static void main(String[] args) {
+//		Chain c = new Chain("Hatsi Hinam");
+//		
+//		
+//		for (Branch b : c.getBranches()) {
+//			for (Employee e : b.getEmployees()) {
+//				System.out.println(e);
+//			}
+//		}
 	}
-
 }
