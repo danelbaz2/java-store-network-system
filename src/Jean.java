@@ -1,8 +1,8 @@
 
 public class Jean extends Product {
 
-	public Jean(ProductType productType, String brand, double price) {
-		super(ProductType.PANT, brand, price);
+	public Jean(ProductType productType, BrandType brand) {
+		super(ProductType.PANT, brand, 199.99);
 	}
 
 }

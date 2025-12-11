@@ -1,3 +1,5 @@
+import java.util.HashMap;
+
 public class ReturningCustomer extends Customer
 {
     public ReturningCustomer(String fullName, String id, String phoneNum)
@@ -14,4 +16,9 @@ public class ReturningCustomer extends Customer
     public String toString() {	
     	return super.toString() + this.getClass().getName();
     }
+
+	@Override
+	public HashMap<Product, Integer> startBuying() {
+		return null;
+	}
 }

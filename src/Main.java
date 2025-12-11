@@ -1,14 +1,17 @@
 
 public class Main {
 
+
 	public static void main(String[] args) {
-//		Chain c = new Chain("Hatsi Hinam");
-//		
-//		
-//		for (Branch b : c.getBranches()) {
-//			for (Employee e : b.getEmployees()) {
-//				System.out.println(e);
-//			}
-//		}
+		
+		Branch b = new Branch("Yavne");
+		Customer c = new NewCustomer("Shahaf", "100000005", "0500000000");
+		
+		System.out.println(c.getShoppingList());
+		
+		b.sell(c);
+		
+		
+		
 	}
 }

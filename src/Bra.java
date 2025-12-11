@@ -1,8 +1,8 @@
 
 public class Bra extends Product {
 
-	public Bra(ProductType productType, String brand, double price) {
-		super(ProductType.UNDERWEAR, brand, price);
+	public Bra(ProductType productType, BrandType brand) {
+		super(ProductType.UNDERWEAR, brand, 149.99);
 	}
 
 }

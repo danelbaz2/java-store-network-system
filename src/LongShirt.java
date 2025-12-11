@@ -1,8 +1,8 @@
 
 public class LongShirt extends Product{
 
-	public LongShirt(ProductType productType, String brand, double price) {
-		super(ProductType.SHIRT, brand, price);
+	public LongShirt(ProductType productType, BrandType randomBrand) {
+		super(ProductType.SHIRT, randomBrand, 119.99);
 	}
 
 }

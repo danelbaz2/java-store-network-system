@@ -1,8 +1,8 @@
 
 public class RunningShoe extends Product {
 
-	public RunningShoe(ProductType productType, String brand, double price) {
-		super(ProductType.SHOE, brand, price);
+	public RunningShoe(ProductType productType, BrandType brand) {
+		super(ProductType.SHOE, brand, 499.99);
 	}
 
 }
