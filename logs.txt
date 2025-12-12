@@ -1,0 +1,21 @@
+2025-12-12T17:59:15.047008800 [INFO] System started
+2025-12-12T17:59:15.158140400 [INFO] Employee logged in. sessionId=184b70bb-48f3-40cd-8a35-e2c8047dff0d
+2025-12-12T18:07:12.803313500 [INFO] Login success. employeeId=1001, sessionId=57cf3cd1-93e2-4da6-9cc0-28a6042da697
+2025-12-12T18:12:40.855195 [INFO] Login success. employeeId=1001, sessionId=6f8f27f7-8be7-4065-9c18-32f20829c7d2
+2025-12-12T18:13:35.878143800 [INFO] Logout. sessionId=6f8f27f7-8be7-4065-9c18-32f20829c7d2
+2025-12-12T18:21:14.680076600 [INFO] Login success. employeeId=2001, sessionId=53e10458-66a4-4163-9099-c12f4d0d790c
+2025-12-12T18:22:57.356379700 [INFO] Login success. employeeId=1001, sessionId=b0d98db1-e859-483e-9358-42c934fa98d1
+2025-12-12T18:23:59.366225700 [INFO] Admin created employee. adminId=1001, newEmployeeId=1002
+2025-12-12T18:24:23.371519600 [INFO] Logout. sessionId=b0d98db1-e859-483e-9358-42c934fa98d1
+2025-12-12T18:24:34.868801900 [INFO] Login success. employeeId=1002, sessionId=49a9c207-ebae-45af-8c31-3d27b0f29cb9
+2025-12-12T18:28:09.325873300 [INFO] Login success. employeeId=1001, sessionId=021a2c89-5e89-4105-9e94-cd8e71fbbe56
+2025-12-12T18:28:21.320615 [INFO] Logout. sessionId=021a2c89-5e89-4105-9e94-cd8e71fbbe56
+2025-12-12T18:30:44.601404900 [INFO] Login success. employeeId=1001, sessionId=7d66cfa8-0205-46d9-8a5b-83e17b1b97b6
+2025-12-12T18:31:14.108773100 [INFO] Admin created employee. adminId=1001, newEmployeeId=1002
+2025-12-12T18:31:29.150190700 [INFO] Logout. sessionId=7d66cfa8-0205-46d9-8a5b-83e17b1b97b6
+2025-12-12T18:31:35.708490600 [INFO] Login success. employeeId=1002, sessionId=bdb86f35-9d49-46b8-b8b5-207b880e32d9
+2025-12-12T22:36:56.073405300 [INFO] Login success. employeeId=1001, sessionId=fe7646f9-a79d-4f57-8321-c79e5ca6e4c8
+2025-12-12T22:37:47.601693300 [INFO] Admin created employee. adminId=1001, newEmployeeId=1003
+2025-12-12T22:44:24.999516500 [INFO] Login success. employeeId=1001, sessionId=2b1a03ac-b8f1-491f-a012-9d272ab6d299
+2025-12-12T22:45:31.239616700 [INFO] Admin updated employee. adminId=1001, employeeId=2001
+2025-12-12T22:45:57.625658900 [INFO] Admin deleted employee. adminId=1001, employeeId=2001
