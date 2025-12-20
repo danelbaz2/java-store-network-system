@@ -83,6 +83,12 @@ public class ConsoleMenu {
         System.out.print("Full name: ");
         String fullName = scanner.nextLine();
 
+        System.out.print("National ID: ");
+        String nationalId = scanner.nextLine();
+
+        System.out.print("Bank Account ID: ");
+        String bankAccountId = scanner.nextLine();
+
         System.out.print("Phone: ");
         String phone = scanner.nextLine();
 
@@ -124,7 +130,7 @@ public class ConsoleMenu {
 
 
         // Create employee (temporary: plain text password, in-memory only)
-        Employee newEmp = new Employee(newId, fullName, phone, branchId, role, password);
+        Employee newEmp = new Employee(newId ,nationalId,fullName,phone,bankAccountId,branchId,role,password);
         employeeStore.add(newEmp);
 
         logger.info("Admin created employee. adminId=" + current.getEmployeeId() + ", newEmployeeId=" + newId);
@@ -149,9 +155,10 @@ public class ConsoleMenu {
         for (Employee e : employeeStore.getAll()) {
             System.out.println(
                     "ID: " + e.getEmployeeId()
-                            + " | Name: " + e.getFullName()
-                            + " | Role: " + e.getRole()
-                            + " | Branch: " + e.getBranchId()
+                    + " | National ID: " + e.getNationalId()
+                    + " | Name: " + e.getFullName()
+                    + " | Role: " + e.getRole()
+                    + " | Branch: " + e.getBranchId()
             );
         }
     }
@@ -177,6 +184,12 @@ public class ConsoleMenu {
         System.out.println("Employee not found.");
         return;
     }
+
+    System.out.print("New national ID: ");
+    String nationalId = scanner.nextLine();
+
+    System.out.print("New bank account ID: ");
+    String bankAccountId = scanner.nextLine();
 
     System.out.println("Press Enter to keep current value.");
 
@@ -227,7 +240,7 @@ public class ConsoleMenu {
         }
     }
 
-    Employee updated = new Employee(employeeId, fullName, phone, branchId, role, password);
+    Employee updated = new Employee(employeeId, nationalId, bankAccountId, fullName, phone, branchId, role, password);
     employeeStore.update(updated);
 
     logger.info("Admin updated employee. adminId=" + current.getEmployeeId() + ", employeeId=" + employeeId);

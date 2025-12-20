@@ -63,18 +63,20 @@ public class EmployeeStore {
                 if (line.trim().isEmpty()) continue;
 
                 // CSV format:
-                // employeeId,fullName,phone,branchId,role,password
+                // employeeId,nationalId,fullName,phone,bankAccountId,branchId,role,password
                 String[] parts = line.split(",", -1);
-                if (parts.length < 6) continue;
+                if (parts.length < 8) continue;
 
                 String employeeId = parts[0].trim();
-                String fullName = parts[1].trim();
-                String phone = parts[2].trim();
-                String branchId = parts[3].trim();
-                Role role = Role.valueOf(parts[4].trim());
-                String password = parts[5];
+                String nationalId = parts[1].trim();
+                String fullName = parts[2].trim();
+                String phone = parts[3].trim();
+                String bankAccountId = parts[4].trim();
+                String branchId = parts[5].trim();
+                Role role = Role.valueOf(parts[6].trim());
+                String password = parts[7];
 
-                Employee e = new Employee(employeeId, fullName, phone, branchId, role, password);
+                Employee e = new Employee(employeeId,nationalId,fullName,phone,bankAccountId,branchId,role,password);
                 byId.put(employeeId, e);
             }
         } catch (Exception ex) {
@@ -85,15 +87,17 @@ public class EmployeeStore {
 
     private void saveToCsv() {
         try (PrintWriter out = new PrintWriter(new FileWriter(csvPath, false))) {
-            out.println("employeeId,fullName,phone,branchId,role,password");
+            out.println("employeeId,nationalId,fullName,phone,bankAccountId,branchId,role,password");
             for (Employee e : byId.values()) {
                 out.println(
                         e.getEmployeeId() + ","
-                                + escape(e.getFullName()) + ","
-                                + escape(e.getPhone()) + ","
-                                + escape(e.getBranchId()) + ","
-                                + e.getRole().name() + ","
-                                + escape(e.getPassword())
+                        + escape(e.getNationalId()) + ","
+                        + escape(e.getFullName()) + ","
+                        + escape(e.getPhone()) + ","
+                        + escape(e.getBankAccountId()) + ","
+                        + escape(e.getBranchId()) + ","
+                        + e.getRole().name() + ","
+                        + escape(e.getPassword())
                 );
             }
         } catch (Exception ex) {

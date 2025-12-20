@@ -1,3 +1,4 @@
-employeeId,fullName,phone,branchId,role,password
-1003,almog,054789965,BR01,SELLER,Ap102030!
-1001,Anna Sabag,050-0000000,BR01,ADMIN,Pass1234!
+employeeId,nationalId,fullName,phone,bankAccountId,branchId,role,password
+1003,207002178,Almog Shwartz,054789965,14002145,BR01,SELLER,Ap102030!
+1002,207004789,Aviv Mizrahi,052484789,1452365,BR01,CASHIER,Test1234!
+1001,100000001,Anna Sabag,0500000000,14002147,BR01,ADMIN,Pass1234!

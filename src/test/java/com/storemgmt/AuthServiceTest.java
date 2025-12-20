@@ -24,7 +24,7 @@ public class AuthServiceTest {
     @Test
     void loginWithCorrectCredentialsShouldCreateSession() {
     EmployeeStore store = new EmployeeStore("target/test-employees.csv");
-        store.add(new Employee("1001", "Test User", "050", "BR01", Role.ADMIN, "Pass1234!"));
+        store.add(new Employee("1001", "100000001", "Anna", "Test User", "14004577", "BR01", Role.ADMIN, "Pass1234!"));
 
         AuthService auth = new AuthService(
                 store,
@@ -41,7 +41,7 @@ public class AuthServiceTest {
     @Test
     void doubleLoginShouldFail() {
     EmployeeStore store = new EmployeeStore("target/test-employees.csv");
-        store.add(new Employee("1001", "Test User", "050", "BR01", Role.ADMIN, "Pass1234!"));
+        store.add(new Employee("1001", "100000001", "Anna", "Test User", "14004577", "BR01", Role.ADMIN, "Pass1234!"));
 
         AuthService auth = new AuthService(
                 store,

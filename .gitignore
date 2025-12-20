@@ -6,3 +6,8 @@ logs.txt
 
 # Compiled classes
 *.class
+
+.vscode/
+logs.txt
+target/
+*.class
