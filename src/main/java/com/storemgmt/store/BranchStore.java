@@ -1,6 +1,6 @@
 package com.storemgmt.store;
 
-import com.storemgmt.model.Branch;
+import com.storemgmt.model.store.Branch;
 
 import java.util.Collection;
 import java.util.HashMap;

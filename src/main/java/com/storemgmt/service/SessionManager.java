@@ -1,6 +1,6 @@
 package com.storemgmt.service;
 
-import com.storemgmt.model.UserSession;
+import com.storemgmt.model.session.UserSession;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +39,6 @@ public class SessionManager {
     }
 
     public UserSession getSession(String sessionId) {
-    return sessionsById.get(sessionId);
+        return sessionsById.get(sessionId);
     }
 }

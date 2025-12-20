@@ -1,9 +1,5 @@
-package com.storemgmt.model;
+package com.storemgmt.model.store;
 
-/**
- * Represents a store branch.
- * Minimal model for S1.
- */
 public class Branch {
 
     private final String branchId;

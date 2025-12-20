@@ -1,7 +1,7 @@
 package com.storemgmt;
 
-import com.storemgmt.model.Employee;
-import com.storemgmt.model.Role;
+import com.storemgmt.model.employee.Employee;
+import com.storemgmt.model.employee.Role;
 import com.storemgmt.security.PasswordPolicy;
 import com.storemgmt.service.AuthService;
 import com.storemgmt.service.SessionManager;
@@ -16,22 +16,29 @@ public class AuthServiceTest {
 
     // Simple test logger (no file IO during tests)
     private static class TestLogger implements ILogger {
-        @Override public void info(String message) { }
-        @Override public void error(String message) { }
-        @Override public void error(String message, Exception ex) { }
+        @Override
+        public void info(String message) {
+        }
+
+        @Override
+        public void error(String message) {
+        }
+
+        @Override
+        public void error(String message, Exception ex) {
+        }
     }
 
     @Test
     void loginWithCorrectCredentialsShouldCreateSession() {
-    EmployeeStore store = new EmployeeStore("target/test-employees.csv");
+        EmployeeStore store = new EmployeeStore("target/test-employees.csv");
         store.add(new Employee("1001", "Test User", "050", "BR01", Role.ADMIN, "Pass1234!"));
 
         AuthService auth = new AuthService(
                 store,
                 new SessionManager(),
                 PasswordPolicy.defaultPolicy(),
-                new TestLogger()
-        );
+                new TestLogger());
 
         var session = auth.login("1001", "Pass1234!");
         assertNotNull(session);
@@ -40,15 +47,14 @@ public class AuthServiceTest {
 
     @Test
     void doubleLoginShouldFail() {
-    EmployeeStore store = new EmployeeStore("target/test-employees.csv");
+        EmployeeStore store = new EmployeeStore("target/test-employees.csv");
         store.add(new Employee("1001", "Test User", "050", "BR01", Role.ADMIN, "Pass1234!"));
 
         AuthService auth = new AuthService(
                 store,
                 new SessionManager(),
                 PasswordPolicy.defaultPolicy(),
-                new TestLogger()
-        );
+                new TestLogger());
 
         auth.login("1001", "Pass1234!");
 

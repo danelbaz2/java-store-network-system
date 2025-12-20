@@ -1,7 +1,7 @@
 package com.storemgmt.service;
 
-import com.storemgmt.model.Employee;
-import com.storemgmt.model.UserSession;
+import com.storemgmt.model.employee.Employee;
+import com.storemgmt.model.session.UserSession;
 import com.storemgmt.security.PasswordPolicy;
 import com.storemgmt.security.PasswordValidator;
 import com.storemgmt.store.EmployeeStore;
@@ -14,7 +14,8 @@ public class AuthService {
     private final PasswordPolicy passwordPolicy;
     private final ILogger logger;
 
-    public AuthService(EmployeeStore employeeStore, SessionManager sessionManager, PasswordPolicy passwordPolicy, ILogger logger) {
+    public AuthService(EmployeeStore employeeStore, SessionManager sessionManager, PasswordPolicy passwordPolicy,
+            ILogger logger) {
         this.employeeStore = employeeStore;
         this.sessionManager = sessionManager;
         this.passwordPolicy = passwordPolicy;

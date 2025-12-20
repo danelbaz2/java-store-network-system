@@ -1,8 +1,9 @@
 package com.storemgmt.ui;
 
-import com.storemgmt.model.Employee;
-import com.storemgmt.model.Role;
-import com.storemgmt.model.UserSession;
+import com.storemgmt.model.employee.Employee;
+import com.storemgmt.model.employee.Role;
+import com.storemgmt.model.session.UserSession;
+import com.storemgmt.model.store.Branch;
 import com.storemgmt.security.PasswordPolicy;
 import com.storemgmt.service.AuthService;
 import com.storemgmt.service.SessionManager;
@@ -10,9 +11,6 @@ import com.storemgmt.store.BranchStore;
 import com.storemgmt.store.EmployeeStore;
 import com.storemgmt.utils.FileLogger;
 import com.storemgmt.utils.ILogger;
-import com.storemgmt.model.Branch;
-import com.storemgmt.store.BranchStore;
-
 
 import java.util.Scanner;
 
@@ -32,8 +30,7 @@ public class ConsoleMenu {
             employeeStore,
             sessionManager,
             PasswordPolicy.defaultPolicy(),
-            logger
-    );
+            logger);
 
     public ConsoleMenu() {
         // Demo branches (temporary, in-memory)
@@ -41,13 +38,13 @@ public class ConsoleMenu {
         branchStore.add(new Branch("BR02", "North Branch"));
     }
 
-
     // Holds current logged-in sessionId (null if not logged in)
     private String currentSessionId = null;
 
     // Returns the currently logged-in employee, or null if not logged in
     private Employee getCurrentEmployee() {
-        if (currentSessionId == null) return null;
+        if (currentSessionId == null)
+            return null;
 
         UserSession session = sessionManager.getSession(currentSessionId);
         if (session == null || !session.isActive()) {
@@ -90,12 +87,12 @@ public class ConsoleMenu {
         String branchId = scanner.nextLine();
 
         if (!branchStore.exists(branchId)) {
-        System.out.println("Invalid Branch ID. Available branches:");
-        for (Branch b : branchStore.getAll()) {
-            System.out.println("- " + b.getBranchId() + " (" + b.getName() + ")");
+            System.out.println("Invalid Branch ID. Available branches:");
+            for (Branch b : branchStore.getAll()) {
+                System.out.println("- " + b.getBranchId() + " (" + b.getName() + ")");
+            }
+            return;
         }
-        return;
-    }
 
         System.out.print("Role (ADMIN/CASHIER/SELLER/SHIFT_MANAGER): ");
         String roleInput = scanner.nextLine().trim().toUpperCase();
@@ -114,14 +111,12 @@ public class ConsoleMenu {
         // Validate password against current policy
         var validation = com.storemgmt.security.PasswordValidator.validate(
                 password,
-                com.storemgmt.security.PasswordPolicy.defaultPolicy()
-        );
+                com.storemgmt.security.PasswordPolicy.defaultPolicy());
 
         if (!validation.isValid()) {
             System.out.println("Password is not valid: " + validation.getMessage());
             return;
         }
-
 
         // Create employee (temporary: plain text password, in-memory only)
         Employee newEmp = new Employee(newId, fullName, phone, branchId, role, password);
@@ -151,90 +146,88 @@ public class ConsoleMenu {
                     "ID: " + e.getEmployeeId()
                             + " | Name: " + e.getFullName()
                             + " | Role: " + e.getRole()
-                            + " | Branch: " + e.getBranchId()
-            );
+                            + " | Branch: " + e.getBranchId());
         }
     }
 
     // ADMIN-only action: update an existing employee.
     // Press Enter to keep current value.
     private void updateEmployeeAdminOnly() {
-    Employee current = getCurrentEmployee();
-    if (current == null) {
-        System.out.println("Not logged in.");
-        return;
-    }
-    if (current.getRole() != Role.ADMIN) {
-        System.out.println("Access denied: ADMIN only.");
-        return;
-    }
-
-    System.out.print("Employee ID to update: ");
-    String employeeId = scanner.nextLine().trim();
-
-    Employee existing = employeeStore.findById(employeeId);
-    if (existing == null) {
-        System.out.println("Employee not found.");
-        return;
-    }
-
-    System.out.println("Press Enter to keep current value.");
-
-    System.out.print("Full name (" + existing.getFullName() + "): ");
-    String fullName = scanner.nextLine();
-    if (fullName.isBlank()) fullName = existing.getFullName();
-
-    System.out.print("Phone (" + existing.getPhone() + "): ");
-    String phone = scanner.nextLine();
-    if (phone.isBlank()) phone = existing.getPhone();
-
-    System.out.print("Branch ID (" + existing.getBranchId() + "): ");
-    String branchId = scanner.nextLine().trim();
-    if (branchId.isBlank()) {
-        branchId = existing.getBranchId();
-    } else if (!branchStore.exists(branchId)) {
-        System.out.println("Invalid Branch ID. Available branches:");
-        for (Branch b : branchStore.getAll()) {
-            System.out.println("- " + b.getBranchId() + " (" + b.getName() + ")");
-        }
-        return;
-    }
-
-    System.out.print("Role (" + existing.getRole() + "): ");
-    String roleInput = scanner.nextLine().trim();
-    Role role = existing.getRole();
-    if (!roleInput.isBlank()) {
-        try {
-            role = Role.valueOf(roleInput.toUpperCase());
-        } catch (Exception ex) {
-            System.out.println("Invalid role.");
+        Employee current = getCurrentEmployee();
+        if (current == null) {
+            System.out.println("Not logged in.");
             return;
         }
-    }
-
-    System.out.print("Password (leave empty to keep current): ");
-    String password = scanner.nextLine();
-    if (password.isBlank()) {
-        password = existing.getPassword();
-    } else {
-        var validation = com.storemgmt.security.PasswordValidator.validate(
-                password,
-                com.storemgmt.security.PasswordPolicy.defaultPolicy()
-        );
-        if (!validation.isValid()) {
-            System.out.println("Password is not valid: " + validation.getMessage());
+        if (current.getRole() != Role.ADMIN) {
+            System.out.println("Access denied: ADMIN only.");
             return;
         }
+
+        System.out.print("Employee ID to update: ");
+        String employeeId = scanner.nextLine().trim();
+
+        Employee existing = employeeStore.findById(employeeId);
+        if (existing == null) {
+            System.out.println("Employee not found.");
+            return;
+        }
+
+        System.out.println("Press Enter to keep current value.");
+
+        System.out.print("Full name (" + existing.getFullName() + "): ");
+        String fullName = scanner.nextLine();
+        if (fullName.isBlank())
+            fullName = existing.getFullName();
+
+        System.out.print("Phone (" + existing.getPhone() + "): ");
+        String phone = scanner.nextLine();
+        if (phone.isBlank())
+            phone = existing.getPhone();
+
+        System.out.print("Branch ID (" + existing.getBranchId() + "): ");
+        String branchId = scanner.nextLine().trim();
+        if (branchId.isBlank()) {
+            branchId = existing.getBranchId();
+        } else if (!branchStore.exists(branchId)) {
+            System.out.println("Invalid Branch ID. Available branches:");
+            for (Branch b : branchStore.getAll()) {
+                System.out.println("- " + b.getBranchId() + " (" + b.getName() + ")");
+            }
+            return;
+        }
+
+        System.out.print("Role (" + existing.getRole() + "): ");
+        String roleInput = scanner.nextLine().trim();
+        Role role = existing.getRole();
+        if (!roleInput.isBlank()) {
+            try {
+                role = Role.valueOf(roleInput.toUpperCase());
+            } catch (Exception ex) {
+                System.out.println("Invalid role.");
+                return;
+            }
+        }
+
+        System.out.print("Password (leave empty to keep current): ");
+        String password = scanner.nextLine();
+        if (password.isBlank()) {
+            password = existing.getPassword();
+        } else {
+            var validation = com.storemgmt.security.PasswordValidator.validate(
+                    password,
+                    com.storemgmt.security.PasswordPolicy.defaultPolicy());
+            if (!validation.isValid()) {
+                System.out.println("Password is not valid: " + validation.getMessage());
+                return;
+            }
+        }
+
+        Employee updated = new Employee(employeeId, fullName, phone, branchId, role, password);
+        employeeStore.update(updated);
+
+        logger.info("Admin updated employee. adminId=" + current.getEmployeeId() + ", employeeId=" + employeeId);
+        System.out.println("Employee updated successfully.");
     }
-
-    Employee updated = new Employee(employeeId, fullName, phone, branchId, role, password);
-    employeeStore.update(updated);
-
-    logger.info("Admin updated employee. adminId=" + current.getEmployeeId() + ", employeeId=" + employeeId);
-    System.out.println("Employee updated successfully.");
-}
-
-
 
     // ADMIN-only action: delete an employee from the store.
     private void deleteEmployeeAdminOnly() {
@@ -281,7 +274,6 @@ public class ConsoleMenu {
         System.out.println("Employee deleted successfully.");
     }
 
-    
     public void run() {
         while (true) {
             printMenu();

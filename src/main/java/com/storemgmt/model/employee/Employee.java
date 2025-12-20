@@ -1,4 +1,4 @@
-package com.storemgmt.model;
+package com.storemgmt.model.employee;
 
 public class Employee {
     private final String employeeId;
@@ -6,9 +6,6 @@ public class Employee {
     private final String phone;
     private final String branchId;
     private final Role role;
-
-    // בשלב הזה נשמור סיסמה כטקסט רגיל כדי להתקדם.
-    // בהמשך (S2) נשדרג ל-hash.
     private String password;
 
     public Employee(String employeeId, String fullName, String phone, String branchId, Role role, String password) {

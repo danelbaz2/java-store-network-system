@@ -1,7 +1,7 @@
 package com.storemgmt.store;
 
-import com.storemgmt.model.Employee;
-import com.storemgmt.model.Role;
+import com.storemgmt.model.employee.Employee;
+import com.storemgmt.model.employee.Role;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -39,8 +39,8 @@ public class EmployeeStore {
     }
 
     public void update(Employee employee) {
-    byId.put(employee.getEmployeeId(), employee);
-    saveToCsv();
+        byId.put(employee.getEmployeeId(), employee);
+        saveToCsv();
     }
 
     public void delete(String employeeId) {
@@ -60,12 +60,14 @@ public class EmployeeStore {
                     firstLine = false;
                     continue;
                 }
-                if (line.trim().isEmpty()) continue;
+                if (line.trim().isEmpty())
+                    continue;
 
                 // CSV format:
                 // employeeId,fullName,phone,branchId,role,password
                 String[] parts = line.split(",", -1);
-                if (parts.length < 6) continue;
+                if (parts.length < 6)
+                    continue;
 
                 String employeeId = parts[0].trim();
                 String fullName = parts[1].trim();
@@ -93,8 +95,7 @@ public class EmployeeStore {
                                 + escape(e.getPhone()) + ","
                                 + escape(e.getBranchId()) + ","
                                 + e.getRole().name() + ","
-                                + escape(e.getPassword())
-                );
+                                + escape(e.getPassword()));
             }
         } catch (Exception ex) {
             throw new RuntimeException("Failed to save employees CSV: " + ex.getMessage(), ex);
@@ -103,7 +104,8 @@ public class EmployeeStore {
 
     // Minimal escape to avoid breaking CSV when user types commas
     private String escape(String value) {
-        if (value == null) return "";
+        if (value == null)
+            return "";
         return value.replace(",", " ");
     }
 }
