@@ -69,7 +69,7 @@ public class Branch {
 
 			if (currentAmount < amountToBuy) { // if there is not enough item in the inventory, cannot buy the item
 				System.out.println("Product '" + product.getKey().getClass().getName()
-						+ "' does not available in branch " + this.name);
+						+ "' are not available in branch " + this.name);
 				continue;
 			}
 			
@@ -93,7 +93,7 @@ public class Branch {
 	public void displayProduct() {
 		for (Map.Entry<Product, Integer> entry : products.entrySet()) {
 			if (entry.getValue() > 0)
-				System.out.println("Product: '" + entry.getClass().getName() + "' - Amount: " + entry.getValue());
+				System.out.println("Product: '" + entry.getKey() + "' - Amount: " + entry.getValue());
 		}
 	}
 
