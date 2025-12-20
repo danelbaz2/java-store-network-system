@@ -1,0 +1,8 @@
+# Maven
+target/
+
+# Logs
+logs.txt
+
+# Compiled classes
+*.class
