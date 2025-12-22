@@ -46,7 +46,7 @@ public class ServerApp {
         StoreBranch telAviv = new StoreBranch("BR01", "Tel Aviv");
         telAviv.addEmployee(new Employee("E001", "Admin User", "050-1111111", "BR01", Role.ADMIN, "Admin123!"));
         telAviv.addEmployee(new Employee("E002", "Sarah Cohen", "050-2222222", "BR01", Role.CASHIER, "Cashier1!"));
-        telAviv.addEmployee(new Employee("E003", "David Levi", "050-3333333", "BR01", Role.SELLER, "Saeller123!"));
+        telAviv.addEmployee(new Employee("E003", "David Levi", "050-3333333", "BR01", Role.SELLER, "Seller123!"));
         chain.addBranch(telAviv);
 
         // Create branch 2: Jerusalem

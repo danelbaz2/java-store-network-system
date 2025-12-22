@@ -70,7 +70,7 @@ public class StoreBranch {
         return sellRecord;
     }
 
-    public void sell(Customer customer) {
+    public synchronized void sell(Customer customer) {
         double sum = 0;
         Map<Product, Integer> shoppingList = customer.getShoppingList();
 

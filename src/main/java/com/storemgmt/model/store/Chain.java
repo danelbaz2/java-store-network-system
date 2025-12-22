@@ -44,8 +44,7 @@ public class Chain {
     public void addBranch(StoreBranch branch) {
         branches.add(branch);
     }
-    
-    // Thread-safe method to get a branch by ID
+
     // Used by the server to handle requests from multiple clients
     public synchronized StoreBranch getBranchById(String branchId) {
         for (StoreBranch branch : branches) {
