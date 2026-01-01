@@ -1,9 +1,15 @@
 package com.storemgmt.server;
 
+import com.google.gson.JsonObject;
 import com.storemgmt.model.employee.Employee;
 import com.storemgmt.model.employee.Role;
 import com.storemgmt.model.store.Chain;
 import com.storemgmt.model.store.StoreBranch;
+import com.google.gson.JsonParser;
+import com.storemgmt.utils.JsonLoader;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 
 /**
  * Entry point for the server application.
@@ -15,9 +21,10 @@ import com.storemgmt.model.store.StoreBranch;
  * 4. Starts the StoreServer on port 5000
  */
 public class ServerApp {
-
     public static void main(String[] args) {
-        int port = 5000;
+        JsonLoader.load("C:\\Users\\user\\dev\\WebDevelopment\\java-store-network-system\\config.json");
+
+        int port = JsonLoader.getInt("server.port");
 
         // Create the chain (central data store)
         Chain chain = createChainWithSampleData();
@@ -41,6 +48,7 @@ public class ServerApp {
         telAviv.addEmployee(new Employee("E001", "Admin User", "050-1111111", "BR01", Role.ADMIN, "Admin123!"));
         telAviv.addEmployee(new Employee("E002", "Sarah Cohen", "050-2222222", "BR01", Role.CASHIER, "Cashier1!"));
         telAviv.addEmployee(new Employee("E003", "David Levi", "050-3333333", "BR01", Role.SELLER, "Seller123!"));
+        telAviv.addEmployee(new Employee("E004", "Manager Shahaf", "052-4444444", "BR01", Role.ADMIN, "123456!"));
         chain.addBranch(telAviv);
 
         // Create branch 2: Jerusalem

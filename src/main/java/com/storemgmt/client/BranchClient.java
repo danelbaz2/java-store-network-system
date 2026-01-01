@@ -4,28 +4,17 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
+import java.util.HashMap;
 
-import com.storemgmt.protocol.Request;
-import com.storemgmt.protocol.Response;
-
-/**
- * TCP Client that connects to the StoreServer.
- * 
- * This class handles the network communication:
- * - Connects to server at host:port
- * - Sends Request objects
- * - Receives Response objects
- * - Manages connection lifecycle
- */
 public class BranchClient {
 
-    private final String host;
-    private final int port;
-    private final String branchId;
+    private String host;
+    private int port;
+    private String branchId;
 
     private Socket socket;
-    private DataInputStream inputStream;
-    private PrintStream outputStream;
+    private DataInputStream in;
+    private PrintStream out;
     private boolean connected;
 
     public BranchClient(String host, int port, String branchId) {
@@ -35,63 +24,76 @@ public class BranchClient {
         this.connected = false;
     }
 
-    // Connect to the server
     public boolean connect() {
         try {
-            System.out.println("Connecting to server at " + host + ":" + port + "...");
+            System.out.println("Connecting to " + host + ":" + port + "...");
             socket = new Socket(host, port);
-
-            // Create streams (output first to avoid deadlock)
-            outputStream = new PrintStream(socket.getOutputStream());
-            inputStream = new DataInputStream(socket.getInputStream());
-
+            out = new PrintStream(socket.getOutputStream());
+            in = new DataInputStream(socket.getInputStream());
             connected = true;
-            System.out.println("Connected successfully!\n");
+            System.out.println("Connected!\n");
             return true;
-
         } catch (IOException e) {
-            System.err.println("Failed to connect: " + e.getMessage());
+            System.out.println("Failed to connect: " + e.getMessage());
             return false;
         }
     }
 
-    // Send a request and wait for response
-    public Response sendRequest(Request request) {
+    // Send message and get response - simple pipe format
+    // Format: ACTION|branchId|key1:value1|key2:value2
+    public String[] send(String message) {
         if (!connected) {
-            return Response.error("Not connected to server");
+            return new String[] { "ERROR", "Not connected" };
         }
 
         try {
-            // Send the request
-            outputStream.println(request.toString());
-            outputStream.flush();
+            out.println(message);
+            out.flush();
 
-            // Wait for and return the response
-            return Response.cast(inputStream.readLine());
+            String response = in.readLine();
+            return parseResponse(response);
 
         } catch (Exception e) {
             connected = false;
-            return Response.error("Connection error: " + e.getMessage());
+            return new String[] { "ERROR", e.getMessage() };
         }
     }
 
-    // Disconnect from server
+    // Parse response: OK|message|key1:value1|key2:value2
+    private String[] parseResponse(String line) {
+        if (line == null) {
+            return new String[] { "ERROR", "No response" };
+        }
+        return line.split("\\|");
+    }
+
+    // Helper to get data from parsed response
+    public static HashMap<String, String> getData(String[] parts) {
+        HashMap<String, String> data = new HashMap<>();
+        for (int i = 2; i < parts.length; i++) {
+            String[] kv = parts[i].split(":", 2);
+            if (kv.length == 2) {
+                data.put(kv[0], kv[1]);
+            }
+        }
+        return data;
+    }
+
     public void disconnect() {
         connected = false;
         try {
-            if (inputStream != null)
-                inputStream.close();
-            if (outputStream != null)
-                outputStream.close();
+            if (in != null)
+                in.close();
+            if (out != null)
+                out.close();
             if (socket != null)
                 socket.close();
-            System.out.println("Disconnected from server.");
+            System.out.println("Disconnected.");
         } catch (IOException e) {
-            System.err.println("Error during disconnect: " + e.getMessage());
+            System.out.println("Error: " + e.getMessage());
         }
     }
 
-    // Getters
     public String getBranchId() {
         return branchId;
     }

@@ -25,21 +25,21 @@ public class StoreBranch {
     }
 
     private void initializeInventory() {
-        this.products.put(new Jean(ProductType.PANT, BrandType.ADIDAS), 50);
-        this.products.put(new Jean(ProductType.PANT, BrandType.BERSHKA), 50);
-        this.products.put(new Jean(ProductType.PANT, BrandType.LEVIS), 50);
-        this.products.put(new Jean(ProductType.PANT, BrandType.NIKE), 50);
+        this.products.put(new Jean(BrandType.ADIDAS), 50);
+        this.products.put(new Jean(BrandType.BERSHKA), 50);
+        this.products.put(new Jean(BrandType.LEVIS), 50);
+        this.products.put(new Jean(BrandType.NIKE), 50);
 
-        this.products.put(new LongShirt(ProductType.SHIRT, BrandType.BERSHKA), 50);
-        this.products.put(new LongShirt(ProductType.SHIRT, BrandType.LEVIS), 50);
-        this.products.put(new LongShirt(ProductType.SHIRT, BrandType.POLO), 50);
+        this.products.put(new LongShirt(BrandType.BERSHKA), 50);
+        this.products.put(new LongShirt(BrandType.LEVIS), 50);
+        this.products.put(new LongShirt(BrandType.POLO), 50);
 
-        this.products.put(new Bra(ProductType.UNDERWEAR, BrandType.NIKE), 50);
-        this.products.put(new Bra(ProductType.UNDERWEAR, BrandType.ADIDAS), 50);
-        this.products.put(new Bra(ProductType.UNDERWEAR, BrandType.BERSHKA), 50);
+        this.products.put(new Bra(BrandType.NIKE), 50);
+        this.products.put(new Bra(BrandType.ADIDAS), 50);
+        this.products.put(new Bra(BrandType.BERSHKA), 50);
 
-        this.products.put(new RunningShoe(ProductType.SHOE, BrandType.NIKE), 50);
-        this.products.put(new RunningShoe(ProductType.SHOE, BrandType.ADIDAS), 50);
+        this.products.put(new RunningShoe(BrandType.NIKE), 50);
+        this.products.put(new RunningShoe(BrandType.ADIDAS), 50);
     }
 
     public String getBranchId() {

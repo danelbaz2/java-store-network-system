@@ -45,16 +45,16 @@ public abstract class Product {
 
         switch (random) {
             case 1:
-                retVal = new Jean(ProductType.PANT, randomBrand);
+                retVal = new Jean(randomBrand);
                 break;
             case 2:
-                retVal = new Bra(ProductType.UNDERWEAR, randomBrand);
+                retVal = new Bra(randomBrand);
                 break;
             case 3:
-                retVal = new RunningShoe(ProductType.SHOE, randomBrand);
+                retVal = new RunningShoe(randomBrand);
                 break;
             case 4:
-                retVal = new LongShirt(ProductType.SHIRT, randomBrand);
+                retVal = new LongShirt( randomBrand);
                 break;
         }
 

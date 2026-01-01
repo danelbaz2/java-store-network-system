@@ -1,0 +1,33 @@
+{
+    "server": {
+        "port": 5000,
+        "host": "localhost"
+    },
+    "customers": {
+        "NewCustomer": 1,
+        "ReturningCustomer": 0.8,
+        "VIPCustomer": 0.5
+    },
+    "products": {
+        "Jean": {
+            "price": 150,
+            "initialStock": 50
+        },
+        "LongShirt": {
+            "price": 100,
+            "initialStock": 40
+        },
+        "Bra": {
+            "price": 80,
+            "initialStock": 30
+        },
+        "RunningShoe": {
+            "price": 250,
+            "initialStock": 25
+        }
+    },
+    "branches": {
+        "BR01": "Tel Aviv",
+        "BR02": "Jerusalem"
+    }
+}

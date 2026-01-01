@@ -2,6 +2,7 @@ package com.storemgmt.model.customer;
 
 import java.util.HashMap;
 import com.storemgmt.model.product.Product;
+import com.storemgmt.utils.JsonLoader;
 
 public class VIPCustomer extends Customer {
 
@@ -11,7 +12,7 @@ public class VIPCustomer extends Customer {
 
     @Override
     public double getDiscount() {
-        return 0.5; // 50% discount
+        return JsonLoader.getInt("customers.VIPCustomer"); // 50% discount
     }
 
     @Override

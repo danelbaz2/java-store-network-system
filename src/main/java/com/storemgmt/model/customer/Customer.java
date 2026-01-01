@@ -37,10 +37,6 @@ public abstract class Customer {
         return id;
     }
 
-    public String getPhoneNum() {
-        return phoneNum;
-    }
-
     @Override
     public String toString() {
         return this.fullName + "\n" + this.id + "\n" + this.phoneNum + "\n";

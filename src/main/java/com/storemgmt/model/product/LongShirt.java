@@ -2,7 +2,7 @@ package com.storemgmt.model.product;
 
 public class LongShirt extends Product {
 
-    public LongShirt(ProductType productType, BrandType randomBrand) {
+    public LongShirt(BrandType randomBrand) {
         super(ProductType.SHIRT, randomBrand, 119.99);
     }
 }
