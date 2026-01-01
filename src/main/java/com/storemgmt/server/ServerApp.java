@@ -25,17 +25,11 @@ public class ServerApp {
         // Create and start the server
         StoreServer server = new StoreServer(chain, port);
 
-        // Add shutdown hook for clean exit
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("\nShutting down server...");
-                server.stop();
-            }
-        }));
-
         // Start the server (blocks forever)
         server.start();
+
+        // Stop the server
+        server.stop();
     }
 
     // Creates a Chain with sample branches and employees

@@ -1,8 +1,8 @@
 package com.storemgmt.server;
 
+import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.net.Socket;
 import java.util.Map;
 
@@ -30,8 +30,8 @@ public class ClientHandler implements Runnable {
     private final Chain chain;
     private final StoreServer server;
 
-    private ObjectInputStream inputStream;
-    private ObjectOutputStream outputStream;
+    private DataInputStream inputStream;
+    private PrintStream outputStream;
 
     private String branchId; // Which branch this client represents
     private String sessionId; // Current user's session (null if not logged in)
@@ -47,8 +47,8 @@ public class ClientHandler implements Runnable {
     public void run() {
         try {
             // Create streams for communication (output first to avoid deadlock)
-            outputStream = new ObjectOutputStream(socket.getOutputStream());
-            inputStream = new ObjectInputStream(socket.getInputStream());
+            inputStream = new DataInputStream(socket.getInputStream());
+            outputStream = new PrintStream(socket.getOutputStream());
 
             System.out.println("Client handler ready for communication");
 
@@ -56,7 +56,7 @@ public class ClientHandler implements Runnable {
             while (true) {
                 try {
                     // Wait for a request from client
-                    Request request = (Request) inputStream.readObject();
+                    Request request = Request.cast(inputStream.readLine());
 
                     // Store the branch ID from the request
                     if (request.getBranchId() != null) {
@@ -69,10 +69,10 @@ public class ClientHandler implements Runnable {
                     Response response = handleRequest(request);
 
                     // Send response back to client
-                    outputStream.writeObject(response);
+                    outputStream.println(response.toString());
                     outputStream.flush();
 
-                } catch (ClassNotFoundException e) {
+                } catch (Exception e) {
                     System.err.println("Unknown object received: " + e.getMessage());
                 }
             }
@@ -238,15 +238,16 @@ public class ClientHandler implements Runnable {
         }
 
         // TODO: Broadcast to other clients
+
         return Response.success("Message sent (TODO: implement broadcast)");
     }
 
     // Send a message to this client (for chat broadcasting)
     public void sendMessage(Response response) {
         try {
-            outputStream.writeObject(response);
+            outputStream.println(response.toString());
             outputStream.flush();
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.err.println("Error sending message to client: " + e.getMessage());
         }
     }

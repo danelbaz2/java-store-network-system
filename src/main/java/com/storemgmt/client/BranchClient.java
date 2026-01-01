@@ -1,8 +1,8 @@
 package com.storemgmt.client;
 
+import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.net.Socket;
 
 import com.storemgmt.protocol.Request;
@@ -24,8 +24,8 @@ public class BranchClient {
     private final String branchId;
 
     private Socket socket;
-    private ObjectOutputStream outputStream;
-    private ObjectInputStream inputStream;
+    private DataInputStream inputStream;
+    private PrintStream outputStream;
     private boolean connected;
 
     public BranchClient(String host, int port, String branchId) {
@@ -42,8 +42,8 @@ public class BranchClient {
             socket = new Socket(host, port);
 
             // Create streams (output first to avoid deadlock)
-            outputStream = new ObjectOutputStream(socket.getOutputStream());
-            inputStream = new ObjectInputStream(socket.getInputStream());
+            outputStream = new PrintStream(socket.getOutputStream());
+            inputStream = new DataInputStream(socket.getInputStream());
 
             connected = true;
             System.out.println("Connected successfully!\n");
@@ -63,17 +63,15 @@ public class BranchClient {
 
         try {
             // Send the request
-            outputStream.writeObject(request);
+            outputStream.println(request.toString());
             outputStream.flush();
 
             // Wait for and return the response
-            return (Response) inputStream.readObject();
+            return Response.cast(inputStream.readLine());
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             connected = false;
             return Response.error("Connection error: " + e.getMessage());
-        } catch (ClassNotFoundException e) {
-            return Response.error("Invalid response from server");
         }
     }
 

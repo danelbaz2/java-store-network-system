@@ -1,6 +1,7 @@
 package com.storemgmt.client;
 
-import java.util.Scanner;
+import java.io.DataInputStream;
+import java.io.IOException;
 
 import com.storemgmt.protocol.ActionType;
 import com.storemgmt.protocol.Request;
@@ -18,25 +19,25 @@ import com.storemgmt.protocol.Response;
 public class BranchMenu {
 
     private final BranchClient client;
-    private final Scanner scanner;
+    private final DataInputStream consoleStream;
     private String sessionId; // Current session after login
     private String employeeName; // Logged in employee name
     private String role; // Employee role (ADMIN, CASHIER, etc.)
 
     public BranchMenu(BranchClient client) {
         this.client = client;
-        this.scanner = new Scanner(System.in);
+        this.consoleStream = new DataInputStream(System.in);
     }
 
     // Main menu loop
-    public void run() {
-        boolean running = true;
+    public void run() throws IOException {
 
-        while (running && client.isConnected()) {
+        // Looping while client is connected
+        while (client.isConnected()) {
             printMenu();
 
             System.out.print("Choose option: ");
-            String input = scanner.nextLine().trim();
+            String input = consoleStream.readLine();
 
             switch (input) {
                 case "1":
@@ -58,15 +59,14 @@ public class BranchMenu {
                     logout();
                     break;
                 case "0":
-                    running = false;
                     client.disconnect();
-                    break;
+                    System.out.println("Goodbye!");
+                    return;
                 default:
                     System.out.println("Invalid option!\n");
             }
         }
 
-        System.out.println("Goodbye!");
     }
 
     // Print the menu
@@ -88,17 +88,19 @@ public class BranchMenu {
     }
 
     // Login action
-    private void login() {
+    private void login() throws IOException {
+
+        // Return if already logged in
         if (sessionId != null) {
             System.out.println("Already logged in as " + employeeName);
             return;
         }
 
         System.out.print("Employee ID: ");
-        String employeeId = scanner.nextLine().trim();
+        String employeeId = consoleStream.readLine();
 
         System.out.print("Password: ");
-        String password = scanner.nextLine().trim();
+        String password = consoleStream.readLine();
 
         // Create and send login request
         Request request = new Request(ActionType.LOGIN, client.getBranchId())
@@ -111,10 +113,11 @@ public class BranchMenu {
             sessionId = response.getString("sessionId");
             employeeName = response.getString("employeeName");
             role = response.getString("role");
-            System.out.println("\n✓ " + response.getMessage());
+            System.out.println();
+            System.out.println(response.getMessage());
             System.out.println("  Welcome, " + employeeName + "!");
         } else {
-            System.out.println("\n✗ " + response.getMessage());
+            System.out.println(response.getMessage());
         }
     }
 
@@ -128,29 +131,29 @@ public class BranchMenu {
         Response response = client.sendRequest(request);
 
         if (response.isSuccess()) {
-            System.out.println("\n" + response.getMessage());
+            System.out.println(response.getMessage());
             System.out.println("─────────────────────────────────────");
             System.out.println(response.getString("inventory"));
         } else {
-            System.out.println("\n✗ " + response.getMessage());
+            System.out.println(response.getMessage());
         }
     }
 
     // Sell a product
-    private void sellProduct() {
+    private void sellProduct() throws IOException {
         if (sessionId == null) {
             System.out.println("Please login first!");
             return;
         }
 
         System.out.print("Product type (Jean/LongShirt/Bra/RunningShoe): ");
-        String productType = scanner.nextLine().trim();
+        String productType = consoleStream.readLine();
 
         System.out.print("Brand (NIKE/ADIDAS/LEVIS/BERSHKA/POLO): ");
-        String brand = scanner.nextLine().trim();
+        String brand = consoleStream.readLine();
 
         System.out.print("Quantity: ");
-        String quantity = scanner.nextLine().trim();
+        String quantity = consoleStream.readLine();
 
         Request request = new Request(ActionType.SELL_PRODUCT, client.getBranchId())
                 .put("productType", productType)
@@ -161,10 +164,9 @@ public class BranchMenu {
         Response response = client.sendRequest(request);
 
         if (response.isSuccess()) {
-            System.out.println("\n✓ " + response.getMessage());
-            System.out.println("I need to sell HERE");
+            System.out.println(response.getMessage());
         } else {
-            System.out.println("\n✗ " + response.getMessage());
+            System.out.println(response.getMessage());
         }
     }
 
@@ -181,30 +183,30 @@ public class BranchMenu {
         Response response = client.sendRequest(request);
 
         if (response.isSuccess()) {
-            System.out.println("\n" + response.getMessage());
+            System.out.println(response.getMessage());
             System.out.println("─────────────────────────────────────");
             System.out.println(response.getString("employees"));
         } else {
-            System.out.println("\n✗ " + response.getMessage());
+            System.out.println(response.getMessage());
         }
     }
 
     // Send chat message
-    private void sendChatMessage() {
+    private void sendChatMessage() throws IOException {
         if (sessionId == null) {
             System.out.println("Please login first!");
             return;
         }
 
         System.out.print("Enter message: ");
-        String message = scanner.nextLine().trim();
+        String message = consoleStream.readLine();
 
         Request request = new Request(ActionType.SEND_MESSAGE, client.getBranchId())
                 .put("message", message);
         request.setSessionId(sessionId);
 
         Response response = client.sendRequest(request);
-        System.out.println(response.isSuccess() ? "✓ " + response.getMessage() : "✗ " + response.getMessage());
+        System.out.println(response.isSuccess() ? response.getMessage() : response.getMessage());
     }
 
     // Logout
@@ -220,12 +222,12 @@ public class BranchMenu {
         Response response = client.sendRequest(request);
 
         if (response.isSuccess()) {
-            System.out.println("\n✓ " + response.getMessage());
+            System.out.println(response.getMessage());
             sessionId = null;
             employeeName = null;
             role = null;
         } else {
-            System.out.println("\n✗ " + response.getMessage());
+            System.out.println(response.getMessage());
         }
     }
 }

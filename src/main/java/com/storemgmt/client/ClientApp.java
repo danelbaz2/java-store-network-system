@@ -1,5 +1,6 @@
 package com.storemgmt.client;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 /**
@@ -29,15 +30,24 @@ public class ClientApp {
 
         System.out.println("========================================");
         System.out.println("     Store Branch Client - " + branchId);
-        System.out.println("========================================\n");
+        System.out.println("========================================");
+        System.out.println();
 
         BranchClient client = new BranchClient(host, port, branchId);
 
         if (client.connect()) {
             BranchMenu menu = new BranchMenu(client);
-            menu.run();
+
+            try {
+                menu.run();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            client.disconnect(); // Close the connection
+
         } else {
-            System.out.println("Could not connect to server. Make sure the server is running.");
+            System.out.println("Could not connect to server. Check if the server is running.");
         }
     }
 }
