@@ -1,7 +1,7 @@
 package com.storemgmt.client;
 
 import com.storemgmt.utils.JsonLoader;
-
+import java.nio.file.Paths;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -24,7 +24,7 @@ public class ClientApp {
         System.out.print("Enter your branchId:");
         String branchId = scanner.nextLine();
 
-        JsonLoader.load("C:\\Users\\user\\dev\\WebDevelopment\\java-store-network-system\\config.json");
+        JsonLoader.load(Paths.get(System.getProperty("user.dir"), "config.json").toString());
         String host = JsonLoader.getString("server.host");
         int port = JsonLoader.getInt("server.port");
 
