@@ -104,13 +104,24 @@ public class BranchMenu {
 
         String[] response = client.send(msg);
 
-        if (response[0].equals("OK")) {
+        if (response == null || response.length == 0) {
+            System.out.println("No response from server");
+            return;
+        }
+
+        if (response[0].equals("OK") && response.length > 1) {
             HashMap<String, String> data = BranchClient.getData(response);
             System.out.println(response[1]);
             System.out.println("-----------------------------------");
-            System.out.println(data.get("inventory"));
-        } else {
+            // Convert escaped newlines back to real newlines for display
+            String inventory = data.get("inventory");
+            if (inventory != null) {
+                System.out.println(inventory.replace("\\n", "\n"));
+            }
+        } else if (response.length > 1) {
             System.out.println(response[1]);
+        } else {
+            System.out.println("Invalid response from server");
         }
     }
 
@@ -150,7 +161,11 @@ public class BranchMenu {
             HashMap<String, String> data = BranchClient.getData(response);
             System.out.println(response[1]);
             System.out.println("-----------------------------------");
-            System.out.println(data.get("employees"));
+            // Convert escaped newlines back to real newlines for display
+            String employees = data.get("employees");
+            if (employees != null) {
+                System.out.println(employees.replace("\\n", "\n"));
+            }
         } else {
             System.out.println(response[1]);
         }

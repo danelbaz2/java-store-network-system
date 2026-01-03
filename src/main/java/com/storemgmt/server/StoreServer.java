@@ -80,6 +80,8 @@ public class StoreServer {
             }
         } catch (IOException e) {
             System.err.println("Error closing server: " + e.getMessage());
+        } finally {
+            System.out.println("Bye bye");
         }
     }
 

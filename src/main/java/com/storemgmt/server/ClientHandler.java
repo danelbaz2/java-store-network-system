@@ -147,14 +147,14 @@ public class ClientHandler implements Runnable {
                 Product p = entry.getKey();
                 int qty = entry.getValue();
                 if (qty > 0) {
-                    // Use simple format without : or | to avoid parsing issues
+                    // Use escaped \n instead of real newlines to keep response on single line
                     inventory.append(p.getBrand()).append(" ").append(p.getClass().getSimpleName())
-                            .append(" (").append(qty).append(" units) - $").append(p.getPrice()).append("\n");
+                            .append(" (").append(qty).append(" units) - $").append(p.getPrice()).append("\\n");
                 }
             }
 
-            // Replace : and | with safe characters for data
-            String safeInventory = inventory.toString().replace("|", "-").replace(":", "-");
+            // Replace : and | with safe characters, and ensure no real newlines
+            String safeInventory = inventory.toString().replace("|", "-").replace(":", "-").replace("\n", "\\n");
             return "OK|Inventory for " + branch.getName() + "|inventory:" + safeInventory;
         }
     }
@@ -193,10 +193,10 @@ public class ClientHandler implements Runnable {
                         .append(emp.getFullName())
                         .append(" (")
                         .append(emp.getRole())
-                        .append(")\n");
+                        .append(")\\n"); // Escaped newline
             }
 
-            return "OK|Employees in " + branch.getName() + "|employees:" + list.toString();
+            return "OK|Employees in " + branch.getName() + "|employees:" + list.toString().replace("\n", "\\n");
         }
     }
 
