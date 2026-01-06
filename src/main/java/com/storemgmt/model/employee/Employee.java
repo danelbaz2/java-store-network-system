@@ -3,9 +3,9 @@ package com.storemgmt.model.employee;
 public class Employee {
     private final String employeeId;
     private final String fullName;
-    private final String phone;
-    private final String branchId;
-    private final Role role;
+    private String phone;
+    private String branchId;
+    private Role role;
     private String password;
 
     public Employee(String employeeId, String fullName, String phone, String branchId, Role role, String password) {

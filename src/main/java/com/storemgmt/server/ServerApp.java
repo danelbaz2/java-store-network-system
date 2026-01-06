@@ -10,6 +10,7 @@ import com.storemgmt.utils.JsonLoader;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.nio.file.Paths;
 
 /**
  * Entry point for the server application.
@@ -22,8 +23,7 @@ import java.io.FileReader;
  */
 public class ServerApp {
     public static void main(String[] args) {
-        JsonLoader.load("C:\\Users\\user\\dev\\WebDevelopment\\java-store-network-system\\config.json");
-
+        JsonLoader.load(Paths.get(System.getProperty("user.dir"), "config.json").toString());
         int port = JsonLoader.getInt("server.port");
 
         // Create the chain (central data store)
@@ -44,7 +44,7 @@ public class ServerApp {
         Chain chain = new Chain("FashionStore Chain");
 
         // Create branch 1: Tel Aviv
-        StoreBranch telAviv = new StoreBranch("BR01", "Tel Aviv");
+        StoreBranch telAviv = new StoreBranch("BR01", JsonLoader.getString("branches.BR01"));
         telAviv.addEmployee(new Employee("E001", "Admin User", "050-1111111", "BR01", Role.ADMIN, "Admin123!"));
         telAviv.addEmployee(new Employee("E002", "Sarah Cohen", "050-2222222", "BR01", Role.CASHIER, "Cashier1!"));
         telAviv.addEmployee(new Employee("E003", "David Levi", "050-3333333", "BR01", Role.SELLER, "Seller123!"));
@@ -52,7 +52,7 @@ public class ServerApp {
         chain.addBranch(telAviv);
 
         // Create branch 2: Jerusalem
-        StoreBranch jerusalem = new StoreBranch("BR02", "Jerusalem");
+        StoreBranch jerusalem = new StoreBranch("BR02", JsonLoader.getString("branches.BR02"));
         jerusalem.addEmployee(new Employee("E004", "Manager Moshe", "052-4444444", "BR02", Role.ADMIN, "Admin456!"));
         jerusalem.addEmployee(new Employee("E005", "Yael Gold", "052-5555555", "BR02", Role.CASHIER, "Cashier2!"));
         chain.addBranch(jerusalem);
