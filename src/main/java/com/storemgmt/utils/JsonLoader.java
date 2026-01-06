@@ -59,5 +59,18 @@ public class JsonLoader {
 
         return current.get(lastKey).getAsString();
     }
-}
 
+    public static java.util.Set<String> getKeys(String path) {
+        String[] keys = path.split("\\.");
+        JsonObject current = json;
+
+        for (int i = 0; i < keys.length; i++) {
+            if (!current.has(keys[i]) || !current.get(keys[i]).isJsonObject()) {
+                throw new IllegalArgumentException("Missing key: " + keys[i]);
+            }
+            current = current.getAsJsonObject(keys[i]);
+        }
+
+        return current.keySet();
+    }
+}

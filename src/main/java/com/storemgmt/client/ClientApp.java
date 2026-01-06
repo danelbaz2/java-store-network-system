@@ -20,12 +20,17 @@ import java.util.Scanner;
 public class ClientApp {
 
     private static Scanner scanner = new Scanner(System.in);
+    private static String branchId;
 
     public static void main(String[] args) {
-        System.out.print("Enter your branchId:");
-        String branchId = scanner.nextLine();
 
         JsonLoader.load(Paths.get(System.getProperty("user.dir"), "config.json").toString());
+
+        do {
+            System.out.print("Enter your branchId: ");
+            branchId = scanner.nextLine();
+        } while (!isBranchIdValid(branchId));
+
         String host = JsonLoader.getString("server.host");
         int port = JsonLoader.getInt("server.port");
 
@@ -50,5 +55,18 @@ public class ClientApp {
         } else {
             System.out.println("Could not connect to server. Check if the server is running.");
         }
+    }
+
+    private static boolean isBranchIdValid(String branchId) {
+        if (branchId == null || branchId.isEmpty()) {
+            System.out.println("Branch ID: " + branchId + " is invalid.");
+            return false;
+        }
+        if (JsonLoader.getKeys("branches").contains(branchId)) {
+            System.out.println("Branch ID: " + branchId + " is valid.");
+            return true;
+        }
+        System.out.println("Branch ID: " + branchId + " is invalid.");
+        return false;
     }
 }
