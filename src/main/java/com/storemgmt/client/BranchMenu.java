@@ -19,9 +19,11 @@ public class BranchMenu {
 
     public void run() throws IOException {
 
-        login();
-
         while (client.isConnected()) {
+
+            if (!login()) {
+                continue;
+            }
 
             if (role.equals("ADMIN")) {
                 printAdminMenu();
@@ -57,7 +59,6 @@ public class BranchMenu {
                     updateInventory();
                     break;
                 case "0":
-                    client.disconnect();
                     System.out.println("Goodbye!");
                     return;
                 default:
@@ -165,17 +166,15 @@ public class BranchMenu {
         System.out.println("5. Logout");
         System.out.println("6. Add Employee");
         System.out.println("7. Remove Employee");
-        System.out.println("8. Update Employee");
-        System.out.println("9. Update Inventory");
-        System.out.println("10. Update Product");
+        System.out.println("8. Update Inventory");
         System.out.println("0. Exit");
         System.out.println("========================================");
     }
 
-    private void login() throws IOException {
+    private boolean login() throws IOException {
         if (sessionId != null) {
             System.out.println("Already logged in as " + employeeName);
-            return;
+            return false;
         }
 
         System.out.print("Employee ID: ");
@@ -194,8 +193,10 @@ public class BranchMenu {
             role = data.get("role");
             System.out.println("\n" + response[1]);
             System.out.println("  Welcome, " + employeeName + "!");
+            return true;
         } else {
             System.out.println(response[1]);
+            return false;
         }
     }
 

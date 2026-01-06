@@ -39,8 +39,8 @@ public class BranchClient {
         }
     }
 
-    // Send message and get response - simple pipe format
-    // Format: ACTION|branchId|key1:value1|key2:value2
+    // Format: ACTION|branchId|k1:v1|k2:v2|...
+
     public String[] send(String message) {
         if (!connected) {
             return new String[] { "ERROR", "Not connected" };
