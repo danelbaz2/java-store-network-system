@@ -4,30 +4,28 @@ import java.util.Objects;
 
 public abstract class Product {
 
-    private ProductType productType;
-    private BrandType brand;
+    private final String productId;
+    private final ProductType productType;
+    private final BrandType brand;
     private double price;
 
-    public Product(ProductType productType, BrandType brand, double price) {
+    public Product(String productId, ProductType productType, BrandType brand, double price) {
+        this.productId = productId;
         this.productType = productType;
         this.brand = brand;
         this.price = price;
+    }
+
+    public String getProductId() {
+        return productId;
     }
 
     public ProductType getProductType() {
         return productType;
     }
 
-    public void setProductType(ProductType productType) {
-        this.productType = productType;
-    }
-
     public BrandType getBrand() {
         return brand;
-    }
-
-    public void setBrand(BrandType brand) {
-        this.brand = brand;
     }
 
     public double getPrice() {
@@ -38,23 +36,26 @@ public abstract class Product {
         this.price = price;
     }
 
+    private static int productCounter = 1000;
+
     public static Product getRandomProduct() {
         Product retVal = null;
         int random = (int) (Math.random() * 4) + 1;
         BrandType randomBrand = BrandType.values()[(int) (Math.random() * BrandType.values().length)];
+        String productId = "P" + (productCounter++);
 
         switch (random) {
             case 1:
-                retVal = new Jean(randomBrand);
+                retVal = new Jean(productId, randomBrand);
                 break;
             case 2:
-                retVal = new Bra(randomBrand);
+                retVal = new Bra(productId, randomBrand);
                 break;
             case 3:
-                retVal = new RunningShoe(randomBrand);
+                retVal = new RunningShoe(productId, randomBrand);
                 break;
             case 4:
-                retVal = new LongShirt( randomBrand);
+                retVal = new LongShirt(productId, randomBrand);
                 break;
         }
 
