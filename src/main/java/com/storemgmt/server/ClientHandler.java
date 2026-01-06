@@ -235,12 +235,16 @@ public class ClientHandler implements Runnable {
                 Product p = entry.getKey();
                 int qty = entry.getValue();
                 if (qty > 0) {
-                    inventory.append(p.getBrand()).append(" ").append(p.getClass().getSimpleName())
-                            .append(" (").append(qty).append(" units) - $").append(p.getPrice()).append("\\n");
+                    inventory.append(p.getProductId())
+                            .append(" - ").append(p.getBrand())
+                            .append(" ")
+                            .append(p.getClass().getSimpleName())
+                            .append(" (").append(qty)
+                            .append(" units) - $")
+                            .append(p.getPrice())
+                            .append("\\n");
                 }
             }
-
-            System.out.println(inventory.toString());
 
             return "OK|Inventory for " + branch.getName() + "|inventory:" + inventory.toString();
         }
