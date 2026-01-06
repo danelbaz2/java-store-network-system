@@ -8,9 +8,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.storemgmt.model.employee.Employee;
+import com.storemgmt.model.employee.Role;
 import com.storemgmt.model.product.Product;
 import com.storemgmt.model.store.Chain;
 import com.storemgmt.model.store.StoreBranch;
+import com.storemgmt.security.PasswordValidator;
 
 public class ClientHandler implements Runnable {
 
@@ -87,16 +89,102 @@ public class ClientHandler implements Runnable {
                 return handleGetEmployees();
             case "SEND_MESSAGE":
                 return handleSendMessage(data);
+            case "ADD_EMPLOYEE":
+                return handleAddEmployee(data);
+            case "REMOVE_EMPLOYEE":
+                return handleRemoveEmployee(data);
+            case "UPDATE_INVENTORY":
+                return handleUpdateInventory(data);
             default:
                 return "ERROR|Unknown action: " + action;
         }
+    }
+
+    private String handleUpdateInventory(HashMap<String, String> data) {
+        String productId = data.get("productId");
+        String quantity = data.get("quantity");
+
+        synchronized (chain) {
+            StoreBranch branch = chain.getBranchById(branchId);
+            if (branch == null) {
+                return "ERROR|Branch not found: " + branchId;
+            }
+
+            Product product = branch.getProductById(productId);
+            if (product == null) {
+                return "ERROR|Product not found: " + productId;
+            }
+
+            branch.updateProductQuantity(product, Integer.parseInt(quantity));
+            return "OK|Inventory updated successfully";
+        }
+    }
+
+    private String handleAddEmployee(HashMap<String, String> data) {
+
+        String empId = data.get("employeeId");
+        String fullName = data.get("fullName");
+        String phone = data.get("phone");
+        String branchId = data.get("branchId");
+        String role = data.get("role");
+        String password = data.get("password");
+
+        if (fieldIsEmpty(empId, fullName, phone, branchId, role, password)) {
+            return "ERROR|Missing employeeId, fullName, phone, branchId, role, or password";
+        }
+
+        if (!PasswordValidator.isValid(password)) {
+            return "ERROR|Invalid password";
+        }
+
+        // ?
+        synchronized (chain) {
+            StoreBranch branch = chain.getBranchById(branchId);
+            if (branch == null) {
+                return "ERROR|Branch not found: " + branchId;
+            }
+
+            Employee emp = new Employee(empId, fullName, phone, branchId, Role.valueOf(role), password);
+            branch.addEmployee(emp);
+            return "OK|Employee added successfully";
+        }
+    }
+
+    private String handleRemoveEmployee(HashMap<String, String> data) {
+        String empId = data.get("employeeId");
+        String branchId = data.get("branchId");
+
+        if (empId.isEmpty() || branchId.isEmpty()) {
+            return "ERROR|Missing employeeId or branchId";
+        }
+
+        synchronized (chain) {
+            StoreBranch branch = chain.getBranchById(branchId);
+            if (branch == null) {
+                return "ERROR|Branch not found: " + branchId;
+            }
+
+            Employee emp = branch.getEmployeeById(empId);
+            if (emp == null) {
+                return "ERROR|Employee not found: " + empId;
+            }
+
+            branch.removeEmployee(emp);
+            return "OK|Employee removed successfully";
+        }
+    }
+
+    private boolean fieldIsEmpty(String empId, String fullName, String phone, String branchId2, String role,
+            String password) {
+        return empId.isEmpty() || fullName.isEmpty() || phone.isEmpty() || branchId2.isEmpty() || role.isEmpty()
+                || password.isEmpty();
     }
 
     private String handleLogin(HashMap<String, String> data) {
         String empId = data.get("employeeId");
         String password = data.get("password");
 
-        if (empId == null || password == null) {
+        if (empId.isEmpty() || password.isEmpty()) {
             return "ERROR|Missing employeeId or password";
         }
 
@@ -147,15 +235,14 @@ public class ClientHandler implements Runnable {
                 Product p = entry.getKey();
                 int qty = entry.getValue();
                 if (qty > 0) {
-                    // Use escaped \n instead of real newlines to keep response on single line
                     inventory.append(p.getBrand()).append(" ").append(p.getClass().getSimpleName())
                             .append(" (").append(qty).append(" units) - $").append(p.getPrice()).append("\\n");
                 }
             }
 
-            // Replace : and | with safe characters, and ensure no real newlines
-            String safeInventory = inventory.toString().replace("|", "-").replace(":", "-").replace("\n", "\\n");
-            return "OK|Inventory for " + branch.getName() + "|inventory:" + safeInventory;
+            System.out.println(inventory.toString());
+
+            return "OK|Inventory for " + branch.getName() + "|inventory:" + inventory.toString();
         }
     }
 
@@ -191,12 +278,12 @@ public class ClientHandler implements Runnable {
                 list.append(emp.getEmployeeId())
                         .append(" - ")
                         .append(emp.getFullName())
-                        .append(" (")
+                        .append(" - ")
                         .append(emp.getRole())
-                        .append(")\\n"); // Escaped newline
+                        .append("\\n");
             }
 
-            return "OK|Employees in " + branch.getName() + "|employees:" + list.toString().replace("\n", "\\n");
+            return "OK|Employees in " + branch.getName() + "|employees:" + list.toString();
         }
     }
 

@@ -18,29 +18,43 @@ public class BranchMenu {
     }
 
     public void run() throws IOException {
+
+        login();
+
         while (client.isConnected()) {
-            printMenu();
+
+            if (role.equals("ADMIN")) {
+                printAdminMenu();
+            } else {
+                printRegularMenu();
+            }
             System.out.print("Choose option: ");
             String input = console.readLine();
 
             switch (input) {
                 case "1":
-                    login();
-                    break;
-                case "2":
                     viewInventory();
                     break;
-                case "3":
-                    sellProduct();
+                case "2":
+                    sell();
                     break;
-                case "4":
+                case "3":
                     viewEmployees();
                     break;
-                case "5":
+                case "4":
                     sendChat();
                     break;
-                case "6":
+                case "5":
                     logout();
+                    break;
+                case "6":
+                    addEmployee();
+                    break;
+                case "7":
+                    removeEmployee();
+                    break;
+                case "8":
+                    updateInventory();
                     break;
                 case "0":
                     client.disconnect();
@@ -52,19 +66,108 @@ public class BranchMenu {
         }
     }
 
-    private void printMenu() {
+    private void updateInventory() throws IOException {
+        System.out.print("Product ID: ");
+        String productId = console.readLine();
+        System.out.print("Quantity: ");
+        String quantity = console.readLine();
+
+        String msg = "UPDATE_INVENTORY|"
+                + client.getBranchId()
+                + "|productId:" + productId
+                + "|quantity:" + quantity;
+
+        String[] response = client.send(msg);
+
+        if (response[0].equals("OK")) {
+            System.out.println("Inventory updated successfully!");
+        } else {
+            System.out.println(response[1]);
+        }
+    }
+
+    private void addEmployee() throws IOException {
+        System.out.print("Employee ID: ");
+        String empId = console.readLine();
+        System.out.print("Full name: ");
+        String fullName = console.readLine();
+        System.out.print("Phone: ");
+        String phone = console.readLine();
+        System.out.print("Branch ID: ");
+        String branchId = console.readLine();
+        System.out.print("Role: ");
+        String role = console.readLine();
+        System.out.print("Password: ");
+        String password = console.readLine();
+
+        String msg = "ADD_EMPLOYEE|"
+                + client.getBranchId()
+                + "|employeeId:" + empId
+                + "|fullName:" + fullName
+                + "|phone:" + phone
+                + "|branchId:" + branchId
+                + "|role:" + role
+                + "|password:" + password;
+
+        String[] response = client.send(msg);
+
+        if (response[0].equals("OK")) {
+            System.out.println("Employee added successfully!");
+        } else {
+            System.out.println(response[1]);
+        }
+    }
+
+    private void removeEmployee() throws IOException {
+        System.out.println("Enter the EMPLOYEE ID: ");
+        String empId = console.readLine();
+
+        String msg = "REMOVE_EMPLOYEE|"
+                + client.getBranchId()
+                + "|employeeId:" + empId;
+
+        String[] response = client.send(msg);
+
+        if (response[0].equals("OK")) {
+            System.out.println("Employee removed successfully!");
+        } else {
+            System.out.println(response[1]);
+        }
+    }
+
+    private void printRegularMenu() {
         System.out.println("\n========================================");
         System.out.println("       Branch " + client.getBranchId() + " Menu");
         if (employeeName != null) {
             System.out.println("       Logged in: " + employeeName + " (" + role + ")");
         }
         System.out.println("========================================");
-        System.out.println("1. Login");
-        System.out.println("2. View Inventory");
-        System.out.println("3. Sell Product");
-        System.out.println("4. View Employees");
-        System.out.println("5. Send Chat");
-        System.out.println("6. Logout");
+        System.out.println("1. View Inventory");
+        // System.out.println("2. Sell");
+        System.out.println("3. View Employees");
+        System.out.println("4. Send Chat");
+        System.out.println("5. Logout");
+        System.out.println("0. Exit");
+        System.out.println("========================================");
+    }
+
+    private void printAdminMenu() {
+        System.out.println("\n========================================");
+        System.out.println("       Branch " + client.getBranchId() + " Menu");
+        if (employeeName != null) {
+            System.out.println("       Logged in: " + employeeName + " (" + role + ")");
+        }
+        System.out.println("========================================");
+        System.out.println("1. View Inventory");
+        // System.out.println("2. Sell");
+        System.out.println("3. View Employees");
+        System.out.println("4. Send Chat");
+        System.out.println("5. Logout");
+        System.out.println("6. Add Employee");
+        System.out.println("7. Remove Employee");
+        System.out.println("8. Update Employee");
+        System.out.println("9. Update Inventory");
+        System.out.println("10. Update Product");
         System.out.println("0. Exit");
         System.out.println("========================================");
     }
@@ -113,10 +216,10 @@ public class BranchMenu {
             HashMap<String, String> data = BranchClient.getData(response);
             System.out.println(response[1]);
             System.out.println("-----------------------------------");
-            // Convert escaped newlines back to real newlines for display
+
             String inventory = data.get("inventory");
             if (inventory != null) {
-                System.out.println(inventory.replace("\\n", "\n"));
+                System.out.println(inventory.replace("\\n", "\n")); // Replace escaped newlines with real newlines
             }
         } else if (response.length > 1) {
             System.out.println(response[1]);
@@ -125,7 +228,7 @@ public class BranchMenu {
         }
     }
 
-    private void sellProduct() throws IOException {
+    private void sell() throws IOException {
         if (sessionId == null) {
             System.out.println("Please login first!");
             return;
@@ -138,7 +241,7 @@ public class BranchMenu {
         System.out.print("Quantity: ");
         String qty = console.readLine();
 
-        String msg = "SELL_PRODUCT|" + client.getBranchId() +
+        String msg = "SELL|" + client.getBranchId() +
                 "|sessionId:" + sessionId +
                 "|productType:" + productType +
                 "|brand:" + brand +
@@ -161,10 +264,9 @@ public class BranchMenu {
             HashMap<String, String> data = BranchClient.getData(response);
             System.out.println(response[1]);
             System.out.println("-----------------------------------");
-            // Convert escaped newlines back to real newlines for display
             String employees = data.get("employees");
             if (employees != null) {
-                System.out.println(employees.replace("\\n", "\n"));
+                System.out.println(employees.replace("\\n", "\n")); // Replace escaped newlines with real newlines
             }
         } else {
             System.out.println(response[1]);

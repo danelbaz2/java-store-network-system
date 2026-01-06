@@ -25,21 +25,21 @@ public class StoreBranch {
     }
 
     private void initializeInventory() {
-        this.products.put(new Jean(BrandType.ADIDAS), 50);
-        this.products.put(new Jean(BrandType.BERSHKA), 50);
-        this.products.put(new Jean(BrandType.LEVIS), 50);
-        this.products.put(new Jean(BrandType.NIKE), 50);
+        this.products.put(new Jean("P001", BrandType.ADIDAS), 50);
+        this.products.put(new Jean("P002", BrandType.BERSHKA), 50);
+        this.products.put(new Jean("P003", BrandType.LEVIS), 50);
+        this.products.put(new Jean("P004", BrandType.NIKE), 50);
 
-        this.products.put(new LongShirt(BrandType.BERSHKA), 50);
-        this.products.put(new LongShirt(BrandType.LEVIS), 50);
-        this.products.put(new LongShirt(BrandType.POLO), 50);
+        this.products.put(new LongShirt("P005", BrandType.BERSHKA), 50);
+        this.products.put(new LongShirt("P006", BrandType.LEVIS), 50);
+        this.products.put(new LongShirt("P007", BrandType.POLO), 50);
 
-        this.products.put(new Bra(BrandType.NIKE), 50);
-        this.products.put(new Bra(BrandType.ADIDAS), 50);
-        this.products.put(new Bra(BrandType.BERSHKA), 50);
+        this.products.put(new Bra("P008", BrandType.NIKE), 50);
+        this.products.put(new Bra("P009", BrandType.ADIDAS), 50);
+        this.products.put(new Bra("P010", BrandType.BERSHKA), 50);
 
-        this.products.put(new RunningShoe(BrandType.NIKE), 50);
-        this.products.put(new RunningShoe(BrandType.ADIDAS), 50);
+        this.products.put(new RunningShoe("P011", BrandType.NIKE), 50);
+        this.products.put(new RunningShoe("P012", BrandType.ADIDAS), 50);
     }
 
     public String getBranchId() {
@@ -54,6 +54,15 @@ public class StoreBranch {
         return employees;
     }
 
+    public Employee getEmployeeById(String empId) {
+        for (Employee emp : employees) {
+            if (emp.getEmployeeId().equals(empId)) {
+                return emp;
+            }
+        }
+        return null;
+    }
+
     public void addEmployee(Employee employee) {
         employees.add(employee);
     }
@@ -64,6 +73,15 @@ public class StoreBranch {
 
     public Map<Product, Integer> getProducts() {
         return products;
+    }
+
+    public Product getProductById(String productId) {
+        for (Product product : products.keySet()) {
+            if (product.getProductId().equals(productId)) {
+                return product;
+            }
+        }
+        return null;
     }
 
     public Map<Product, Integer> getSellRecord() {
@@ -115,5 +133,9 @@ public class StoreBranch {
             if (entry.getValue() > 0)
                 System.out.println("Product: '" + entry.getKey() + "' - Quantity: " + entry.getValue());
         }
+    }
+
+    public void updateProductQuantity(Product product, int quantity) {
+        products.put(product, quantity);
     }
 }
