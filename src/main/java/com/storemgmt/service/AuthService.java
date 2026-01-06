@@ -2,7 +2,6 @@ package com.storemgmt.service;
 
 import com.storemgmt.model.employee.Employee;
 import com.storemgmt.model.session.UserSession;
-import com.storemgmt.security.PasswordPolicy;
 import com.storemgmt.security.PasswordValidator;
 import com.storemgmt.store.EmployeeStore;
 import com.storemgmt.utils.ILogger;
@@ -11,14 +10,11 @@ public class AuthService {
 
     private final EmployeeStore employeeStore;
     private final SessionManager sessionManager;
-    private final PasswordPolicy passwordPolicy;
     private final ILogger logger;
 
-    public AuthService(EmployeeStore employeeStore, SessionManager sessionManager, PasswordPolicy passwordPolicy,
-            ILogger logger) {
+    public AuthService(EmployeeStore employeeStore, SessionManager sessionManager, ILogger logger) {
         this.employeeStore = employeeStore;
         this.sessionManager = sessionManager;
-        this.passwordPolicy = passwordPolicy;
         this.logger = logger;
     }
 
@@ -28,12 +24,13 @@ public class AuthService {
             throw new IllegalArgumentException("Employee not found");
         }
 
-        PasswordValidator.ValidationResult result = PasswordValidator.validate(password, passwordPolicy);
-        if (!result.isValid()) {
-            throw new IllegalArgumentException("Password policy failed: " + result.getMessage());
+        // Validate password format
+        String validationError = PasswordValidator.validate(password);
+        if (validationError != null) {
+            throw new IllegalArgumentException("Password policy failed: " + validationError);
         }
 
-        // אימות סיסמה (כרגע plain text)
+        // Check password matches (plain text for now)
         if (!employee.getPassword().equals(password)) {
             throw new IllegalArgumentException("Invalid credentials");
         }

@@ -2,7 +2,6 @@ package com.storemgmt;
 
 import com.storemgmt.model.employee.Employee;
 import com.storemgmt.model.employee.Role;
-import com.storemgmt.security.PasswordPolicy;
 import com.storemgmt.service.AuthService;
 import com.storemgmt.service.SessionManager;
 import com.storemgmt.store.EmployeeStore;
@@ -32,15 +31,11 @@ public class AuthServiceTest {
     @Test
     void loginWithCorrectCredentialsShouldCreateSession() {
         EmployeeStore store = new EmployeeStore("target/test-employees.csv");
-        store.add(new Employee("1001", "Test User", "050", "BR01", Role.ADMIN, "Pass1234!"));
+        store.add(new Employee("1001", "Test User", "050", "BR01", Role.ADMIN, "Pass1234"));
 
-        AuthService auth = new AuthService(
-                store,
-                new SessionManager(),
-                PasswordPolicy.defaultPolicy(),
-                new TestLogger());
+        AuthService auth = new AuthService(store, new SessionManager(), new TestLogger());
 
-        var session = auth.login("1001", "Pass1234!");
+        var session = auth.login("1001", "Pass1234");
         assertNotNull(session);
         assertNotNull(session.getSessionId());
     }
@@ -48,16 +43,12 @@ public class AuthServiceTest {
     @Test
     void doubleLoginShouldFail() {
         EmployeeStore store = new EmployeeStore("target/test-employees.csv");
-        store.add(new Employee("1001", "Test User", "050", "BR01", Role.ADMIN, "Pass1234!"));
+        store.add(new Employee("1001", "Test User", "050", "BR01", Role.ADMIN, "Pass1234"));
 
-        AuthService auth = new AuthService(
-                store,
-                new SessionManager(),
-                PasswordPolicy.defaultPolicy(),
-                new TestLogger());
+        AuthService auth = new AuthService(store, new SessionManager(), new TestLogger());
 
-        auth.login("1001", "Pass1234!");
+        auth.login("1001", "Pass1234");
 
-        assertThrows(IllegalStateException.class, () -> auth.login("1001", "Pass1234!"));
+        assertThrows(IllegalStateException.class, () -> auth.login("1001", "Pass1234"));
     }
 }
