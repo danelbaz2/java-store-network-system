@@ -1,7 +1,9 @@
 package com.storemgmt.utils;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 import java.io.FileReader;
 import java.util.Set;
@@ -75,8 +77,32 @@ public class JsonLoader {
         return current.keySet();
     }
 
-    public static String getKey(String path) {
+    public static void add(String path, JsonElement value) {
         String[] keys = path.split("\\.");
-        return keys[keys.length - 1];
+        JsonObject current = json;
+
+        for (int i = 0; i < keys.length - 1; i++) {
+            String key = keys[i];
+            if (!current.has(key) || !current.get(key).isJsonObject()) {
+                JsonObject newObj = new JsonObject();
+                current.add(key, newObj);
+                current = newObj;
+        } else 
+            {
+            current = current.getAsJsonObject(key);
+        }
+    }
+
+    String lastKey = keys[keys.length - 1];
+    current.add(lastKey, value); // overwrites if exists
+    }
+
+    public static void addString(String path, String value) {
+        add(path, new JsonPrimitive(value));
+    }
+
+    public static void addInt(String path, int value) {
+        add(path, new JsonPrimitive(value));
+    }
     }
 }
