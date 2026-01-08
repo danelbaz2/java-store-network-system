@@ -87,14 +87,13 @@ public class JsonLoader {
                 JsonObject newObj = new JsonObject();
                 current.add(key, newObj);
                 current = newObj;
-        } else 
-            {
-            current = current.getAsJsonObject(key);
+            } else {
+                current = current.getAsJsonObject(key);
+            }
         }
-    }
 
-    String lastKey = keys[keys.length - 1];
-    current.add(lastKey, value); // overwrites if exists
+        String lastKey = keys[keys.length - 1];
+        current.add(lastKey, value); // overwrites if exists
     }
 
     public static void addString(String path, String value) {
@@ -104,5 +103,9 @@ public class JsonLoader {
     public static void addInt(String path, int value) {
         add(path, new JsonPrimitive(value));
     }
+
+    public static String getKey(String path) {
+        String[] keys = path.split("\\.");
+        return keys[keys.length - 1];
     }
 }
