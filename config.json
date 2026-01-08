@@ -1,64 +1,84 @@
 {
-    "server": {
-        "port": 5000,
-        "host": "localhost"
+  "server": {
+    "port": 5000,
+    "host": "localhost"
+  },
+  "customers": {
+    "NewCustomer": 1,
+    "ReturningCustomer": 0.8,
+    "VIPCustomer": 0.5
+  },
+  "employees": {
+    "E001": {
+      "fullName": "Shahaf Elbaz",
+      "phone": "0507777373",
+      "branchId": "BR01",
+      "role": "ADMIN",
+      "password": "Aa123456!"
     },
-    "customers": {
-        "NewCustomer": 1,
-        "ReturningCustomer": 0.8,
-        "VIPCustomer": 0.5
+    "E002": {
+      "fullName": "Cashier User",
+      "phone": "050-2222222",
+      "branchId": "BR02",
+      "role": "Cashier",
+      "password": "Cashier123!"
     },
-    "employees": {
-        "E001": {
-            "employeeId": "E001",
-            "fullName": "Admin User",
-            "phone": "050-1111111",
-            "branchId": "BR01",
-            "role": "Manager",
-            "password": "Admin123!"
-        },
-        "E002": {
-            "fullName": "Cashier User",
-            "phone": "050-2222222",
-            "branchId": "BR02",
-            "role": "Cashier",
-            "password": "Cashier123!"
-        },
-        "E003": {
-            "fullName": "Seller User",
-            "phone": "050-3333333",
-            "branchId": "BR01",
-            "role": "Seller",
-            "password": "Seller123!"
-        },
-        "E004": {
-            "fullName": "Manager User",
-            "phone": "050-4444444",
-            "branchId": "BR02",
-            "role": "Manager",
-            "password": "Manager123!"
-        }
+    "E003": {
+      "fullName": "Seller User",
+      "phone": "050-3333333",
+      "branchId": "BR01",
+      "role": "Seller",
+      "password": "Seller123!"
     },
-    "products": {
-        "Jean": {
-            "price": 150,
-            "initialStock": 50
-        },
-        "LongShirt": {
-            "price": 100,
-            "initialStock": 40
-        },
-        "Bra": {
-            "price": 80,
-            "initialStock": 30
-        },
-        "RunningShoe": {
-            "price": 250,
-            "initialStock": 25
-        }
+    "E004": {
+      "fullName": "Manager User",
+      "phone": "050-4444444",
+      "branchId": "BR02",
+      "role": "Manager",
+      "password": "Manager123!"
     },
-    "branches": {
-        "BR01": "Tel Aviv",
-        "BR02": "Jerusalem"
+    "E005": {
+      "fullName": "Shahaf Elbaz",
+      "phone": "0507777373",
+      "branchId": "BR02",
+      "role": "ADMIN",
+      "password": "Aa123456!"
+    },
+    "E008": {
+      "fullName": "bla bla",
+      "phone": "0526757919",
+      "branchId": "BR01",
+      "role": "CASHIER",
+      "password": "zxcvBnmgd1"
+    },
+    "E006": {
+      "fullName": "2345678",
+      "phone": "0123456789",
+      "branchId": "BR01",
+      "role": "CASHIER",
+      "password": "Aa123456!"
     }
+  },
+  "products": {
+    "Jean": {
+      "price": 150,
+      "initialStock": 50
+    },
+    "LongShirt": {
+      "price": 100,
+      "initialStock": 40
+    },
+    "Bra": {
+      "price": 80,
+      "initialStock": 30
+    },
+    "RunningShoe": {
+      "price": 250,
+      "initialStock": 25
+    }
+  },
+  "branches": {
+    "BR01": "Tel Aviv",
+    "BR02": "Jerusalem"
+  }
 }

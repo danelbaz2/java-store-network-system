@@ -44,4 +44,15 @@ public class Employee {
     public void setPassword(String newPassword) {
         this.password = newPassword;
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "\"fullName\":\"" + fullName + "\"," +
+                "\"phone\":\"" + phone + "\"," +
+                "\"branchId\":\"" + branchId + "\"," +
+                "\"role\":\"" + role.name() + "\"," +
+                "\"password\":\"" + password + "\"" +
+                "}";
+    }
 }

@@ -3,6 +3,11 @@ package com.storemgmt.client;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Set;
+
+import com.storemgmt.model.employee.Role;
+import com.storemgmt.security.PasswordValidator;
+import com.storemgmt.utils.JsonLoader;
 
 public class BranchMenu {
 
@@ -21,7 +26,7 @@ public class BranchMenu {
 
         while (client.isConnected()) {
 
-            if (!login()) {
+            if (sessionId == null && !login()) {
                 continue;
             }
 
@@ -88,18 +93,12 @@ public class BranchMenu {
     }
 
     private void addEmployee() throws IOException {
-        System.out.print("Employee ID: ");
-        String empId = console.readLine();
-        System.out.print("Full name: ");
-        String fullName = console.readLine();
-        System.out.print("Phone: ");
-        String phone = console.readLine();
-        System.out.print("Branch ID: ");
-        String branchId = console.readLine();
-        System.out.print("Role: ");
-        String role = console.readLine();
-        System.out.print("Password: ");
-        String password = console.readLine();
+        String empId = readEmployeeId();
+        String fullName = readName("Full name: ");
+        String phone = readPhone();
+        String branchId = readBranchId();
+        String role = readRole();
+        String password = readPassword();
 
         String msg = "ADD_EMPLOYEE|"
                 + client.getBranchId()
@@ -304,6 +303,104 @@ public class BranchMenu {
             role = null;
         } else {
             System.out.println(response[1]);
+        }
+    }
+
+    // ============ Input Validation Helpers ============
+
+    private String readName() throws IOException {
+        while (true) {
+            System.out.print("Full name: ");
+            String input = console.readLine();
+            if (!input.isEmpty() || isAllLetter(input)) {
+                return input;
+            }
+            System.out.println("  This field is required. Please try again.");
+        }
+    }
+
+    private boolean isAllLetter(String input) {
+        for (char c : input.toCharArray()) {
+            if (!Character.isLetter(c)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private String readEmployeeId() throws IOException {
+        Set<String> existingIds = JsonLoader.getKeys("employees");
+        while (true) {
+            System.out.print("Employee ID (must start with 'E'): ");
+            String input = console.readLine().toUpperCase();
+            if (input.isEmpty() || !input.startsWith("E")) {
+                System.out.println("  Employee ID must start with 'E'. Please try again.");
+                continue;
+            }
+            if (existingIds.contains(input)) {
+                System.out.println("  Employee ID '" + input + "' already exists. Please choose a different ID.");
+                continue;
+            }
+            return input;
+        }
+    }
+
+    private String readPhone() throws IOException {
+        while (true) {
+            System.out.print("Phone (10 digits, starts with 0): ");
+            String input = console.readLine();
+            if (input.length() == 10 && input.startsWith("0") && isAllDigits(input)) {
+                return input;
+            }
+            System.out.println("  Phone must be 10 digits starting with 0. Please try again.");
+        }
+    }
+
+    private boolean isAllDigits(String str) {
+        for (char c : str.toCharArray()) {
+            if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private String readBranchId() throws IOException {
+        Set<String> validBranches = JsonLoader.getKeys("branches");
+        while (true) {
+            System.out.print("Branch ID " + validBranches + ": ");
+            String input = console.readLine().toUpperCase();
+            if (validBranches.contains(input)) {
+                return input;
+            }
+            System.out.println("  Invalid branch. Choose from: " + validBranches);
+        }
+    }
+
+    private String readRole() throws IOException {
+        System.out.println("  Available roles: CASHIER, SELLER, MANAGER, SHIFT_MANAGER, ADMIN");
+        while (true) {
+            System.out.print("Role: ");
+            String input = console.readLine().toUpperCase();
+            try {
+                Role.valueOf(input);
+                return input;
+            } catch (IllegalArgumentException e) {
+                System.out.println("  Invalid role. Choose: CASHIER, SELLER, MANAGER, SHIFT_MANAGER, or ADMIN");
+            }
+        }
+    }
+
+    private String readPassword() throws IOException {
+        System.out.println("  Password requirements: 8+ chars, uppercase, lowercase, digit");
+        while (true) {
+            System.out.print("Password: ");
+            String input = console.readLine();
+            String validationResult = PasswordValidator.validate(input);
+            if (validationResult.equals("valid")) {
+                return input;
+            }
+            System.out.println("  " + validationResult + ". Please try again.");
         }
     }
 }

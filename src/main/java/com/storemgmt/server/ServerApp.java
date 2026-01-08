@@ -88,7 +88,7 @@ public class ServerApp {
                     Role.valueOf(employeeRole),
                     employeePassword);
 
-            branch.addEmployee(employee);
+            branch.getEmployees().add(employee);
             System.out.println("  Created employee: " + employeeName + " (" + employeeId + ") - " + employeeBranchId);
         }
 
