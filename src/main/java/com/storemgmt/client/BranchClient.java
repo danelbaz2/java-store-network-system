@@ -11,7 +11,7 @@ public class BranchClient {
     private String host;
     private int port;
     private String branchId;
-
+    private String employeeId;
     private Socket socket;
     private DataInputStream in;
     private PrintStream out;
@@ -22,6 +22,7 @@ public class BranchClient {
         this.port = port;
         this.branchId = branchId;
         this.connected = false;
+        this.employeeId = "";
     }
 
     public boolean connect() {
@@ -100,5 +101,13 @@ public class BranchClient {
 
     public boolean isConnected() {
         return connected;
+    }
+
+    public String getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
     }
 }

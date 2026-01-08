@@ -10,8 +10,8 @@
   },
   "employees": {
     "E001": {
-      "fullName": "Shahaf Elbaz",
-      "phone": "0507777373",
+      "fullName": "Admin User",
+      "phone": "050-1111111",
       "branchId": "BR01",
       "role": "ADMIN",
       "password": "Aa123456!"
@@ -19,8 +19,8 @@
     "E002": {
       "fullName": "Cashier User",
       "phone": "050-2222222",
-      "branchId": "BR02",
-      "role": "Cashier",
+      "branchId": "BR01",
+      "role": "CASHIER",
       "password": "Cashier123!"
     },
     "E003": {

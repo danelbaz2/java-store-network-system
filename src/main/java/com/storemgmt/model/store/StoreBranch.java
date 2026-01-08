@@ -8,6 +8,7 @@ import com.storemgmt.model.customer.Customer;
 import com.storemgmt.model.employee.Employee;
 import com.storemgmt.model.product.*;
 import com.storemgmt.utils.JsonLoader;
+import com.google.gson.JsonParser;
 
 public class StoreBranch {
     private String branchId;
@@ -68,7 +69,7 @@ public class StoreBranch {
         employees.add(employee);
         // Parse the JSON string from toString() and add as a proper JSON object
         JsonLoader.add("employees." + employee.getEmployeeId(),
-                com.google.gson.JsonParser.parseString(employee.toString()));
+                JsonParser.parseString(employee.toString()));
         JsonLoader.save();
     }
 

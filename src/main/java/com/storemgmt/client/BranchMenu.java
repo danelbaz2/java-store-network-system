@@ -94,7 +94,7 @@ public class BranchMenu {
 
     private void addEmployee() throws IOException {
         String empId = readEmployeeId();
-        String fullName = readName("Full name: ");
+        String fullName = readName();
         String phone = readPhone();
         String branchId = readBranchId();
         String role = readRole();
@@ -120,7 +120,18 @@ public class BranchMenu {
 
     private void removeEmployee() throws IOException {
         System.out.println("Enter the EMPLOYEE ID: ");
-        String empId = console.readLine();
+        Set<String> existingIds = JsonLoader.getKeys("employees");
+        String empId = console.readLine().toUpperCase();
+
+        if (empId.equals(client.getEmployeeId())) {
+            System.out.println("You cannot remove yourself.");
+            return;
+        }
+
+        if (!existingIds.contains(empId)) {
+            System.out.println("Employee ID " + empId + " does not exist.");
+            return;
+        }
 
         String msg = "REMOVE_EMPLOYEE|"
                 + client.getBranchId()
@@ -186,6 +197,7 @@ public class BranchMenu {
         String[] response = client.send(msg);
 
         if (response[0].equals("OK")) {
+            client.setEmployeeId(empId);
             HashMap<String, String> data = BranchClient.getData(response);
             sessionId = data.get("sessionId");
             employeeName = data.get("employeeName");

@@ -92,20 +92,18 @@ public class JsonLoader {
         return keys[keys.length - 1];
     }
 
+    // Removes an item from the JSON, e.g. remove("employees.E001")
     public static void remove(String path) {
-        String[] keys = path.split("\\.");
-        JsonObject current = json;
+        String[] parts = path.split("\\.");
+        JsonObject parent = json;
 
-        for (int i = 0; i < keys.length - 1; i++) {
-            String key = keys[i];
-            if (!current.has(key) || !current.get(key).isJsonObject()) {
-                throw new IllegalArgumentException("Missing key: " + key);
-            }
-            current = current.getAsJsonObject(key);
+        // Navigate to the parent object
+        for (int i = 0; i < parts.length - 1; i++) {
+            parent = parent.getAsJsonObject(parts[i]);
         }
 
-        String lastKey = keys[keys.length - 1];
-        current.remove(lastKey);
+        // Remove the last item
+        parent.remove(parts[parts.length - 1]);
     }
 
     // Adds a new key-value pair to the JSON object

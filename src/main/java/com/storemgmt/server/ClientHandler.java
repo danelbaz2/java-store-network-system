@@ -12,7 +12,7 @@ import com.storemgmt.model.employee.Role;
 import com.storemgmt.model.product.Product;
 import com.storemgmt.model.store.Chain;
 import com.storemgmt.model.store.StoreBranch;
-import com.storemgmt.security.PasswordValidator;
+import com.storemgmt.utils.JsonLoader;
 
 public class ClientHandler implements Runnable {
 
@@ -128,15 +128,6 @@ public class ClientHandler implements Runnable {
         String branchId = data.get("branchId");
         String role = data.get("role");
         String password = data.get("password");
-
-        if (fieldIsEmpty(empId, fullName, phone, branchId, role, password)) {
-            return "ERROR|Missing employeeId, fullName, phone, branchId, role, or password";
-        }
-
-        if (!PasswordValidator.isValid(password)) {
-            return "ERROR|Invalid password";
-        }
-
         // ?
         synchronized (chain) {
             StoreBranch branch = chain.getBranchById(branchId);
@@ -152,11 +143,7 @@ public class ClientHandler implements Runnable {
 
     private String handleRemoveEmployee(HashMap<String, String> data) {
         String empId = data.get("employeeId");
-        String branchId = data.get("branchId");
-
-        if (empId.isEmpty() || branchId.isEmpty()) {
-            return "ERROR|Missing employeeId or branchId";
-        }
+        String branchId = JsonLoader.getString("employees." + empId + ".branchId");
 
         synchronized (chain) {
             StoreBranch branch = chain.getBranchById(branchId);
@@ -172,12 +159,6 @@ public class ClientHandler implements Runnable {
             branch.removeEmployee(emp);
             return "OK|Employee removed successfully";
         }
-    }
-
-    private boolean fieldIsEmpty(String empId, String fullName, String phone, String branchId2, String role,
-            String password) {
-        return empId.isEmpty() || fullName.isEmpty() || phone.isEmpty() || branchId2.isEmpty() || role.isEmpty()
-                || password.isEmpty();
     }
 
     private String handleLogin(HashMap<String, String> data) {
