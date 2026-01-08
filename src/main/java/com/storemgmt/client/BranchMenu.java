@@ -154,7 +154,7 @@ public class BranchMenu {
         }
         System.out.println("========================================");
         System.out.println("1. View Inventory");
-        // System.out.println("2. Sell");
+        System.out.println("2. Sell");
         System.out.println("3. View Employees");
         System.out.println("4. Send Chat");
         System.out.println("5. Logout");
@@ -170,7 +170,7 @@ public class BranchMenu {
         }
         System.out.println("========================================");
         System.out.println("1. View Inventory");
-        // System.out.println("2. Sell");
+        System.out.println("2. Sell");
         System.out.println("3. View Employees");
         System.out.println("4. Send Chat");
         System.out.println("5. Logout");
@@ -246,18 +246,14 @@ public class BranchMenu {
             return;
         }
 
-        System.out.print("Product type (Jean/LongShirt/Bra/RunningShoe): ");
-        String productType = console.readLine();
-        System.out.print("Brand (NIKE/ADIDAS/LEVIS/BERSHKA/POLO): ");
-        String brand = console.readLine();
-        System.out.print("Quantity: ");
-        String qty = console.readLine();
+        // System.out.print("Product type (Jean/LongShirt/Bra/RunningShoe): ");
+        // String productType = console.readLine();
+        // System.out.print("Brand (NIKE/ADIDAS/LEVIS/BERSHKA/POLO): ");
+        // String brand = console.readLine();
+        // System.out.print("Quantity: ");
+        // String qty = console.readLine();
 
-        String msg = "SELL|" + client.getBranchId() +
-                "|sessionId:" + sessionId +
-                "|productType:" + productType +
-                "|brand:" + brand +
-                "|quantity:" + qty;
+        String msg = "SELL|" + client.getBranchId();
 
         String[] response = client.send(msg);
         System.out.println(response[1]);

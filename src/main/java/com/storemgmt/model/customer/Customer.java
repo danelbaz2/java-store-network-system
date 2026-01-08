@@ -24,7 +24,7 @@ public abstract class Customer {
         int range = (int) (Math.random() * 10) + 1;
 
         for (int i = 0; i < range; i++) {
-            int amount = (int) (Math.random() * 60) + 1;
+            int amount = (int) (Math.random() * 10) + 1;
             this.shoppingList.put(Product.getRandomProduct(), amount);
         }
     }

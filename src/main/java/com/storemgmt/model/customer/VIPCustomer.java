@@ -12,7 +12,7 @@ public class VIPCustomer extends Customer {
 
     @Override
     public double getDiscount() {
-        return JsonLoader.getInt("customers.VIPCustomer"); // 50% discount
+        return JsonLoader.getDouble("customers.VIPCustomer"); // 50% discount
     }
 
     @Override

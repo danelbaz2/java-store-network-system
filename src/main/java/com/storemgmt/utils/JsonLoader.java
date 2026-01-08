@@ -51,6 +51,25 @@ public class JsonLoader {
         return current.get(lastKey).getAsInt();
     }
 
+    public static double getDouble(String path) {
+        String[] keys = path.split("\\.");
+        JsonObject current = json;
+
+        for (int i = 0; i < keys.length - 1; i++) {
+            if (!current.has(keys[i]) || !current.get(keys[i]).isJsonObject()) {
+                throw new IllegalArgumentException("Missing key: " + keys[i]);
+            }
+            current = current.getAsJsonObject(keys[i]);
+        }
+
+        String lastKey = keys[keys.length - 1];
+        if (!current.has(lastKey)) {
+            throw new IllegalArgumentException("Missing key: " + lastKey);
+        }
+
+        return current.get(lastKey).getAsDouble();
+    }
+
     // Returns a string value for a given path
     public static String getString(String path) {
         String[] keys = path.split("\\.");

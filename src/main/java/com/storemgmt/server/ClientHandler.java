@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.storemgmt.model.customer.Customer;
 import com.storemgmt.model.employee.Employee;
 import com.storemgmt.model.employee.Role;
 import com.storemgmt.model.product.Product;
@@ -83,8 +84,9 @@ public class ClientHandler implements Runnable {
                 return handleLogout();
             case "GET_INVENTORY":
                 return handleGetInventory();
+            case "SELL":
             case "SELL_PRODUCT":
-                return handleSellProduct(data);
+                return handleSellProduct();
             case "GET_EMPLOYEES":
                 return handleGetEmployees();
             case "SEND_MESSAGE":
@@ -223,7 +225,7 @@ public class ClientHandler implements Runnable {
                             .append(" (").append(qty)
                             .append(" units) - $")
                             .append(p.getPrice())
-                            .append("\\n");
+                            .append("\n");
                 }
             }
 
@@ -231,20 +233,30 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private String handleSellProduct(HashMap<String, String> data) {
+    private String handleSellProduct() {
         if (currentEmployee == null) {
             return "ERROR|Must be logged in to sell";
         }
 
-        String type = data.get("productType");
-        String brand = data.get("brand");
-        String qty = data.get("quantity");
+        synchronized (chain) {
+            StoreBranch branch = chain.getBranchById(branchId);
+            if (branch == null) {
+                return "ERROR|Branch not found";
+            }
 
-        if (type == null || brand == null || qty == null) {
-            return "ERROR|Missing product details";
+            // Get next customer from queue
+            Customer customer = branch.getNextCustomer();
+            if (customer == null) {
+                return "ERROR|No customers in queue";
+            }
+
+            // Process the sale
+            branch.sell(customer);
+
+            return "OK|Served: " + customer.getFullName() +
+                    " (" + customer.getClass().getSimpleName() + ")" +
+                    "|remaining:" + branch.getQueueSize();
         }
-
-        return "OK|Sale recorded: " + type + " - " + brand + " x" + qty;
     }
 
     private String handleGetEmployees() {

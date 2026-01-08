@@ -3,8 +3,12 @@ package com.storemgmt.model.store;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
 import com.storemgmt.model.customer.Customer;
+import com.storemgmt.model.customer.NewCustomer;
+import com.storemgmt.model.customer.ReturningCustomer;
+import com.storemgmt.model.customer.VIPCustomer;
 import com.storemgmt.model.employee.Employee;
 import com.storemgmt.model.product.*;
 import com.storemgmt.utils.JsonLoader;
@@ -16,6 +20,7 @@ public class StoreBranch {
     private Map<Product, Integer> products;
     private LinkedList<Employee> employees;
     private Map<Product, Integer> sellRecord;
+    private Queue<Customer> customerQueue;
 
     public StoreBranch(String branchId, String name) {
         this.branchId = branchId;
@@ -23,7 +28,44 @@ public class StoreBranch {
         products = new HashMap<Product, Integer>();
         employees = new LinkedList<Employee>();
         sellRecord = new HashMap<Product, Integer>();
+        customerQueue = new LinkedList<Customer>();
         initializeInventory();
+        generateCustomers(10);
+    }
+
+    // Generate random customers and add to queue
+    private void generateCustomers(int count) {
+        String[] names = { "John", "Sarah", "Mike", "Emma", "David", "Lisa", "Tom", "Anna", "James", "Maria" };
+
+        for (int i = 0; i < count; i++) {
+            String name = names[(int) (Math.random() * names.length)];
+            String id = "C" + (1000 + i);
+            String phone = "050" + (1000000 + i);
+
+            // Randomly pick a customer type
+            int type = (int) (Math.random() * 3);
+            Customer customer;
+            if (type == 0) {
+                customer = new NewCustomer(name, id, phone);
+            } else if (type == 1) {
+                customer = new ReturningCustomer(name, id, phone);
+            } else {
+                customer = new VIPCustomer(name, id, phone);
+            }
+
+            customerQueue.add(customer);
+        }
+        System.out.println("  Generated " + count + " customers for branch " + branchId);
+    }
+
+    // Get next customer from queue (or null if empty)
+    public Customer getNextCustomer() {
+        return customerQueue.poll();
+    }
+
+    // Check how many customers are waiting
+    public int getQueueSize() {
+        return customerQueue.size();
     }
 
     private void initializeInventory() {
