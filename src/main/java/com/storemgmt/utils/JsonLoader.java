@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.io.FileReader;
+import java.util.Set;
 
 public class JsonLoader {
 
@@ -60,7 +61,7 @@ public class JsonLoader {
         return current.get(lastKey).getAsString();
     }
 
-    public static java.util.Set<String> getKeys(String path) {
+    public static Set<String> getKeys(String path) {
         String[] keys = path.split("\\.");
         JsonObject current = json;
 
@@ -72,5 +73,10 @@ public class JsonLoader {
         }
 
         return current.keySet();
+    }
+
+    public static String getKey(String path) {
+        String[] keys = path.split("\\.");
+        return keys[keys.length - 1];
     }
 }

@@ -1,16 +1,13 @@
 package com.storemgmt.server;
 
-import com.google.gson.JsonObject;
 import com.storemgmt.model.employee.Employee;
 import com.storemgmt.model.employee.Role;
 import com.storemgmt.model.store.Chain;
 import com.storemgmt.model.store.StoreBranch;
-import com.google.gson.JsonParser;
 import com.storemgmt.utils.JsonLoader;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.nio.file.Paths;
+import java.util.Set;
 
 /**
  * Entry point for the server application.
@@ -27,7 +24,7 @@ public class ServerApp {
         int port = JsonLoader.getInt("server.port");
 
         // Create the chain (central data store)
-        Chain chain = createChainWithSampleData();
+        Chain chain = generateChain();
 
         // Create and start the server
         StoreServer server = new StoreServer(chain, port);
@@ -40,30 +37,61 @@ public class ServerApp {
     }
 
     // Creates a Chain with sample branches and employees
-    private static Chain createChainWithSampleData() {
+    private static Chain generateChain() {
         Chain chain = new Chain("FashionStore Chain");
 
-        // Create branch 1: Tel Aviv
-        StoreBranch telAviv = new StoreBranch("BR01", JsonLoader.getString("branches.BR01"));
-        telAviv.addEmployee(new Employee("E001", "Admin User", "050-1111111", "BR01", Role.ADMIN, "Admin123!"));
-        telAviv.addEmployee(new Employee("E002", "Sarah Cohen", "050-2222222", "BR01", Role.CASHIER, "Cashier1!"));
-        telAviv.addEmployee(new Employee("E003", "David Levi", "050-3333333", "BR01", Role.SELLER, "Seller123!"));
-        telAviv.addEmployee(new Employee("E004", "Manager Shahaf", "052-4444444", "BR01", Role.ADMIN, "123456!"));
-        chain.addBranch(telAviv);
-
-        // Create branch 2: Jerusalem
-        StoreBranch jerusalem = new StoreBranch("BR02", JsonLoader.getString("branches.BR02"));
-        jerusalem.addEmployee(new Employee("E004", "Manager Moshe", "052-4444444", "BR02", Role.ADMIN, "Admin456!"));
-        jerusalem.addEmployee(new Employee("E005", "Yael Gold", "052-5555555", "BR02", Role.CASHIER, "Cashier2!"));
-        chain.addBranch(jerusalem);
-
-        System.out.println("Sample data created:");
-        System.out.println("  Branch: " + telAviv.getName() + " (" + telAviv.getBranchId() + ") - "
-                + telAviv.getEmployees().size() + " employees");
-        System.out.println("  Branch: " + jerusalem.getName() + " (" + jerusalem.getBranchId() + ") - "
-                + jerusalem.getEmployees().size() + " employees");
-        System.out.println();
+        GenerateBranches(chain);
 
         return chain;
+    }
+
+    // Load branch keys dynamically from config.json
+    private static void GenerateBranches(Chain chain) {
+        Set<String> branchKeys = JsonLoader.getKeys("branches");
+
+        // Iterate over each branch key and create branches dynamically
+        for (String branchId : branchKeys) {
+            String branchName = JsonLoader.getString("branches." + branchId);
+            System.out.println("  Creating branch: " + branchId + " - " + branchName);
+            StoreBranch branch = new StoreBranch(branchId, branchName);
+            chain.addBranch(branch);
+            GenerateEmployees(branch);
+
+        }
+
+        System.out.println("Sample data created: " + branchKeys.size() + " branches loaded.");
+        System.out.println();
+    }
+
+    private static void GenerateEmployees(StoreBranch branch) {
+        Set<String> employeeKeys = JsonLoader.getKeys("employees");
+
+        // Iterate over each employee and add to matching branch
+        for (String employeeId : employeeKeys) {
+            String basePath = "employees." + employeeId;
+            String employeeBranchId = JsonLoader.getString(basePath + ".branchId");
+
+            // Skip if employee doesn't belong to this branch
+            if (!employeeBranchId.equals(branch.getBranchId())) {
+                continue;
+            }
+
+            String employeeName = JsonLoader.getString(basePath + ".fullName");
+            String employeePhone = JsonLoader.getString(basePath + ".phone");
+            String employeeRole = JsonLoader.getString(basePath + ".role").toUpperCase();
+            String employeePassword = JsonLoader.getString(basePath + ".password");
+
+            Employee employee = new Employee(employeeId,
+                    employeeName,
+                    employeePhone,
+                    employeeBranchId,
+                    Role.valueOf(employeeRole),
+                    employeePassword);
+
+            branch.addEmployee(employee);
+            System.out.println("  Created employee: " + employeeName + " (" + employeeId + ") - " + employeeBranchId);
+        }
+
+        System.out.println();
     }
 }

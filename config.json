@@ -8,6 +8,37 @@
         "ReturningCustomer": 0.8,
         "VIPCustomer": 0.5
     },
+    "employees": {
+        "E001": {
+            "employeeId": "E001",
+            "fullName": "Admin User",
+            "phone": "050-1111111",
+            "branchId": "BR01",
+            "role": "Manager",
+            "password": "Admin123!"
+        },
+        "E002": {
+            "fullName": "Cashier User",
+            "phone": "050-2222222",
+            "branchId": "BR02",
+            "role": "Cashier",
+            "password": "Cashier123!"
+        },
+        "E003": {
+            "fullName": "Seller User",
+            "phone": "050-3333333",
+            "branchId": "BR01",
+            "role": "Seller",
+            "password": "Seller123!"
+        },
+        "E004": {
+            "fullName": "Manager User",
+            "phone": "050-4444444",
+            "branchId": "BR02",
+            "role": "Manager",
+            "password": "Manager123!"
+        }
+    },
     "products": {
         "Jean": {
             "price": 150,
