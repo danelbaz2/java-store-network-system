@@ -14,6 +14,7 @@ import com.storemgmt.model.product.Product;
 import com.storemgmt.model.store.Chain;
 import com.storemgmt.model.store.StoreBranch;
 import com.storemgmt.utils.JsonLoader;
+import com.storemgmt.utils.Logger;
 
 public class ClientHandler implements Runnable {
 
@@ -25,7 +26,6 @@ public class ClientHandler implements Runnable {
     private PrintStream out;
 
     private String branchId;
-    private String sessionId;
     private Employee currentEmployee;
 
     public ClientHandler(Socket socket, Chain chain, StoreServer server) {
@@ -97,6 +97,12 @@ public class ClientHandler implements Runnable {
                 return handleRemoveEmployee(data);
             case "UPDATE_INVENTORY":
                 return handleUpdateInventory(data);
+            case "SHOW_REPORT_BY_BRANCH":
+                return handleShowReportByBranch();
+            case "SHOW_REPORT_BY_CATEGORY":
+                return handleShowReportByCategory();
+            case "SHOW_REPORT_BY_PRODUCT":
+                return handleShowReportByProduct();
             default:
                 return "ERROR|Unknown action: " + action;
         }
@@ -117,8 +123,40 @@ public class ClientHandler implements Runnable {
                 return "ERROR|Product not found: " + productId;
             }
 
-            branch.updateProductQuantity(product, Integer.parseInt(quantity));
+            branch.getProducts().put(product, Integer.parseInt(quantity));
+            JsonLoader.set("products." + productId + ".stock", Integer.parseInt(quantity));
+            JsonLoader.save();
             return "OK|Inventory updated successfully";
+        }
+    }
+
+    private String handleShowReportByBranch() {
+        synchronized (chain) {
+            StoreBranch branch = chain.getBranchById(branchId);
+            if (branch == null) {
+                return "ERROR|Branch not found: " + branchId;
+            }
+            return "OK|" + branch.getReportByBranch();
+        }
+    }
+
+    private String handleShowReportByCategory() {
+        synchronized (chain) {
+            StoreBranch branch = chain.getBranchById(branchId);
+            if (branch == null) {
+                return "ERROR|Branch not found: " + branchId;
+            }
+            return "OK|" + branch.getReportByCategory();
+        }
+    }
+
+    private String handleShowReportByProduct() {
+        synchronized (chain) {
+            StoreBranch branch = chain.getBranchById(branchId);
+            if (branch == null) {
+                return "ERROR|Branch not found: " + branchId;
+            }
+            return "OK|" + branch.getReportByProduct();
         }
     }
 
@@ -139,6 +177,7 @@ public class ClientHandler implements Runnable {
 
             Employee emp = new Employee(empId, fullName, phone, branchId, Role.valueOf(role), password);
             branch.addEmployee(emp);
+            Logger.write("Employee added: " + empId);
             return "OK|Employee added successfully";
         }
     }
@@ -159,6 +198,7 @@ public class ClientHandler implements Runnable {
             }
 
             branch.removeEmployee(emp);
+            Logger.write("Employee removed: " + empId);
             return "OK|Employee removed successfully";
         }
     }
@@ -166,6 +206,15 @@ public class ClientHandler implements Runnable {
     private String handleLogin(HashMap<String, String> data) {
         String empId = data.get("employeeId");
         String password = data.get("password");
+
+        for (ClientHandler client : server.getConnectedClients()) {
+            if (client == this)
+                continue;
+
+            if (client.currentEmployee.getEmployeeId().equals(empId)) {
+                return "ERROR|Already logged in";
+            }
+        }
 
         if (empId.isEmpty() || password.isEmpty()) {
             return "ERROR|Missing employeeId or password";
@@ -181,9 +230,8 @@ public class ClientHandler implements Runnable {
                 if (emp.getEmployeeId().equals(empId)) {
                     if (emp.getPassword().equals(password)) {
                         currentEmployee = emp;
-                        sessionId = "SESSION-" + System.currentTimeMillis();
 
-                        return "OK|Login successful|sessionId:" + sessionId +
+                        return "OK|Login successful" +
                                 "|employeeName:" + emp.getFullName() +
                                 "|role:" + emp.getRole();
                     } else {
@@ -202,7 +250,6 @@ public class ClientHandler implements Runnable {
 
         String name = currentEmployee.getFullName();
         currentEmployee = null;
-        sessionId = null;
         return "OK|Goodbye, " + name;
     }
 
@@ -249,13 +296,14 @@ public class ClientHandler implements Runnable {
             if (customer == null) {
                 return "ERROR|No customers in queue";
             }
+            Logger.write("Customer served: " + customer.getFullName());
 
             // Process the sale
-            branch.sell(customer);
+            double price = branch.sell(customer);
 
-            return "OK|Served: " + customer.getFullName() +
-                    " (" + customer.getClass().getSimpleName() + ")" +
-                    "|remaining:" + branch.getQueueSize();
+            return "OK|Served: (" + customer.getClass().getSimpleName() + ") " + customer.getFullName() +
+                    "|Remaining Customers in queue: " + branch.getQueueSize() +
+                    "|Total Sale: " + String.format("%.2f", price) + "$";
         }
     }
 

@@ -145,6 +145,11 @@ public class JsonLoader {
         current.add(lastKey, value); // overwrites if exists
     }
 
+    public static void set(String oldPath, int newValue) {
+        remove(oldPath);
+        add(oldPath, new JsonPrimitive(newValue));
+    }
+
     // Adds a string value to the JSON object
     public static void addString(String path, String value) {
         add(path, new JsonPrimitive(value));

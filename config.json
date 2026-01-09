@@ -16,20 +16,6 @@
       "role": "ADMIN",
       "password": "Aa123456!"
     },
-    "E002": {
-      "fullName": "Cashier User",
-      "phone": "050-2222222",
-      "branchId": "BR01",
-      "role": "CASHIER",
-      "password": "Cashier123!"
-    },
-    "E003": {
-      "fullName": "Seller User",
-      "phone": "050-3333333",
-      "branchId": "BR01",
-      "role": "Seller",
-      "password": "Seller123!"
-    },
     "E004": {
       "fullName": "Manager User",
       "phone": "050-4444444",
@@ -60,21 +46,53 @@
     }
   },
   "products": {
-    "Jean": {
-      "price": 150,
-      "initialStock": 50
+    "P001": {
+      "type": "Jean",
+      "brand": "ADIDAS",
+      "price": 199.99,
+      "stock": 50
     },
-    "LongShirt": {
-      "price": 100,
-      "initialStock": 40
+    "P002": {
+      "type": "Shorts",
+      "brand": "NIKE",
+      "price": 79.99,
+      "stock": 40
     },
-    "Bra": {
-      "price": 80,
-      "initialStock": 30
+    "P003": {
+      "type": "LongShirt",
+      "brand": "POLO",
+      "price": 129.99,
+      "stock": 45
     },
-    "RunningShoe": {
-      "price": 250,
-      "initialStock": 25
+    "P004": {
+      "type": "TShirt",
+      "brand": "NIKE",
+      "price": 49.99,
+      "stock": 60
+    },
+    "P005": {
+      "type": "Bra",
+      "brand": "NIKE",
+      "price": 149.99,
+      "stock": 35
+    },
+    "P006": {
+      "type": "Boxer",
+      "brand": "ADIDAS",
+      "price": 34.99,
+      "stock": 50
+    },
+    "P007": {
+      "type": "RunningShoe",
+      "brand": "NIKE",
+      "price": 499.99,
+      "stock": 25
+    },
+    "P008": {
+      "type": "Sneaker",
+      "brand": "ADIDAS",
+      "price": 329.99,
+      "stock": 5
     }
   },
   "branches": {

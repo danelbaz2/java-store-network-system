@@ -3,7 +3,7 @@ package com.storemgmt.server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.ArrayList;
 
 import com.storemgmt.model.store.Chain;
 
@@ -25,12 +25,12 @@ public class StoreServer {
     private boolean running; // Flag to control server loop
 
     // List of all connected clients (thread-safe list)
-    private final CopyOnWriteArrayList<ClientHandler> connectedClients;
+    private final ArrayList<ClientHandler> connectedClients;
 
     public StoreServer(Chain chain, int port) {
         this.chain = chain;
         this.port = port;
-        this.connectedClients = new CopyOnWriteArrayList<>();
+        this.connectedClients = new ArrayList<>();
     }
 
     // Start the server and begin accepting connections
@@ -92,7 +92,7 @@ public class StoreServer {
     }
 
     // Get all connected clients (for chat broadcasting)
-    public CopyOnWriteArrayList<ClientHandler> getConnectedClients() {
+    public ArrayList<ClientHandler> getConnectedClients() {
         return connectedClients;
     }
 

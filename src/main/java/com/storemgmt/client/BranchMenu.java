@@ -13,7 +13,6 @@ public class BranchMenu {
 
     private BranchClient client;
     private DataInputStream console;
-    private String sessionId;
     private String employeeName;
     private String role;
 
@@ -26,7 +25,7 @@ public class BranchMenu {
 
         while (client.isConnected()) {
 
-            if (sessionId == null && !login()) {
+            if (employeeName == null && !login()) {
                 continue;
             }
 
@@ -63,20 +62,81 @@ public class BranchMenu {
                 case "8":
                     updateInventory();
                     break;
+                case "9":
+                    reportManagement();
+                    break;
                 case "0":
                     System.out.println("Goodbye!");
                     return;
                 default:
                     System.out.println("Invalid option!\n");
             }
+
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void reportManagement() throws IOException {
+        System.out.println("Choose display type: (1) By Branch, (2) By Category, (3) By Product");
+        String input = console.readLine();
+
+        switch (input) {
+            case "1":
+                showReportByBranch();
+                break;
+            case "2":
+                showReportByCategory();
+                break;
+            case "3":
+                showReportByProduct();
+                break;
+            default:
+                System.out.println("Invalid option!\n");
+        }
+    }
+
+    private void showReportByBranch() {
+        String msg = "SHOW_REPORT_BY_BRANCH|" + client.getBranchId();
+        String[] response = client.send(msg);
+        if (response[0].equals("OK")) {
+            System.out.println(response[1] + "\n" + response[2] + "\n" + response[3]);
+        } else {
+            System.out.println(response[1]);
+        }
+    }
+
+    private void showReportByCategory() {
+        String msg = "SHOW_REPORT_BY_CATEGORY|" + client.getBranchId();
+        String[] response = client.send(msg);
+        if (response[0].equals("OK")) {
+            System.out.println(response[1]);
+        } else {
+            System.out.println(response[1]);
+        }
+    }
+
+    private void showReportByProduct() {
+        String msg = "SHOW_REPORT_BY_PRODUCT|" + client.getBranchId();
+        String[] response = client.send(msg);
+        if (response[0].equals("OK")) {
+            System.out.println(response[1]);
+        } else {
+            System.out.println(response[1]);
         }
     }
 
     private void updateInventory() throws IOException {
-        System.out.print("Product ID: ");
-        String productId = console.readLine();
-        System.out.print("Quantity: ");
-        String quantity = console.readLine();
+        String productId = readProductId();
+        if (productId == null)
+            return;
+
+        String quantity = readQuantity();
+        if (quantity == null)
+            return;
 
         String msg = "UPDATE_INVENTORY|"
                 + client.getBranchId()
@@ -89,6 +149,40 @@ public class BranchMenu {
             System.out.println("Inventory updated successfully!");
         } else {
             System.out.println(response[1]);
+        }
+    }
+
+    private String readProductId() throws IOException {
+        Set<String> existingIds = JsonLoader.getKeys("products");
+        while (true) {
+            System.out.print("Product ID (must start with 'P'): ");
+            String input = console.readLine().toUpperCase();
+
+            if (!input.startsWith("P")) {
+                System.out.println("  Product ID must start with 'P'. Please try again.");
+                continue;
+            }
+
+            if (!existingIds.contains(input)) {
+                System.out.println("  Product ID '" + input + "' does not exist. Available: " + existingIds);
+                continue;
+            }
+
+            return input;
+        }
+    }
+
+    private String readQuantity() throws IOException {
+        while (true) {
+            System.out.print("Quantity (positive number): ");
+            String input = console.readLine();
+
+            if (!isAllDigits(input)) {
+                System.out.println("  Quantity must contain only digits.");
+                continue;
+            }
+
+            return input;
         }
     }
 
@@ -177,16 +271,12 @@ public class BranchMenu {
         System.out.println("6. Add Employee");
         System.out.println("7. Remove Employee");
         System.out.println("8. Update Inventory");
+        System.out.println("9. View Sell Report");
         System.out.println("0. Exit");
         System.out.println("========================================");
     }
 
     private boolean login() throws IOException {
-        if (sessionId != null) {
-            System.out.println("Already logged in as " + employeeName);
-            return false;
-        }
-
         System.out.print("Employee ID: ");
         String empId = console.readLine();
         System.out.print("Password: ");
@@ -199,7 +289,6 @@ public class BranchMenu {
         if (response[0].equals("OK")) {
             client.setEmployeeId(empId);
             HashMap<String, String> data = BranchClient.getData(response);
-            sessionId = data.get("sessionId");
             employeeName = data.get("employeeName");
             role = data.get("role");
             System.out.println("\n" + response[1]);
@@ -213,9 +302,6 @@ public class BranchMenu {
 
     private void viewInventory() {
         String msg = "GET_INVENTORY|" + client.getBranchId();
-        if (sessionId != null) {
-            msg += "|sessionId:" + sessionId;
-        }
 
         String[] response = client.send(msg);
 
@@ -241,7 +327,7 @@ public class BranchMenu {
     }
 
     private void sell() throws IOException {
-        if (sessionId == null) {
+        if (employeeName == null) {
             System.out.println("Please login first!");
             return;
         }
@@ -256,16 +342,16 @@ public class BranchMenu {
         String msg = "SELL|" + client.getBranchId();
 
         String[] response = client.send(msg);
-        System.out.println(response[1]);
+        System.out.println(response[1] + "\n" + response[2] + "\n" + response[3]);
     }
 
     private void viewEmployees() {
-        if (sessionId == null) {
+        if (employeeName == null) {
             System.out.println("Please login first!");
             return;
         }
 
-        String msg = "GET_EMPLOYEES|" + client.getBranchId() + "|sessionId:" + sessionId;
+        String msg = "GET_EMPLOYEES|" + client.getBranchId();
         String[] response = client.send(msg);
 
         if (response[0].equals("OK")) {
@@ -282,7 +368,7 @@ public class BranchMenu {
     }
 
     private void sendChat() throws IOException {
-        if (sessionId == null) {
+        if (employeeName == null) {
             System.out.println("Please login first!");
             return;
         }
@@ -290,23 +376,22 @@ public class BranchMenu {
         System.out.print("Enter message: ");
         String message = console.readLine();
 
-        String msg = "SEND_MESSAGE|" + client.getBranchId() + "|sessionId:" + sessionId + "|message:" + message;
+        String msg = "SEND_MESSAGE|" + client.getBranchId() + "|message:" + message;
         String[] response = client.send(msg);
         System.out.println(response[1]);
     }
 
     private void logout() {
-        if (sessionId == null) {
+        if (employeeName == null) {
             System.out.println("Not logged in!");
             return;
         }
 
-        String msg = "LOGOUT|" + client.getBranchId() + "|sessionId:" + sessionId;
+        String msg = "LOGOUT|" + client.getBranchId();
         String[] response = client.send(msg);
 
         if (response[0].equals("OK")) {
             System.out.println(response[1]);
-            sessionId = null;
             employeeName = null;
             role = null;
         } else {

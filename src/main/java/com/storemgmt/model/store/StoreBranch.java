@@ -69,21 +69,66 @@ public class StoreBranch {
     }
 
     private void initializeInventory() {
-        this.products.put(new Jean("P001", BrandType.ADIDAS), 50);
-        this.products.put(new Jean("P002", BrandType.BERSHKA), 50);
-        this.products.put(new Jean("P003", BrandType.LEVIS), 50);
-        this.products.put(new Jean("P004", BrandType.NIKE), 50);
+        // Load products from JSON config
+        for (String productId : JsonLoader.getKeys("products")) {
+            String type = JsonLoader.getString("products." + productId + ".type");
+            String brand = JsonLoader.getString("products." + productId + ".brand");
+            double price = JsonLoader.getDouble("products." + productId + ".price");
+            int stock = JsonLoader.getInt("products." + productId + ".stock");
 
-        this.products.put(new LongShirt("P005", BrandType.BERSHKA), 50);
-        this.products.put(new LongShirt("P006", BrandType.LEVIS), 50);
-        this.products.put(new LongShirt("P007", BrandType.POLO), 50);
+            BrandType brandType = BrandType.valueOf(brand);
+            Product product = createProduct(productId, type, brandType, price);
 
-        this.products.put(new Bra("P008", BrandType.NIKE), 50);
-        this.products.put(new Bra("P009", BrandType.ADIDAS), 50);
-        this.products.put(new Bra("P010", BrandType.BERSHKA), 50);
+            if (product != null) {
+                this.products.put(product, stock);
+            }
+        }
+        System.out.println("  Loaded " + products.size() + " products for branch " + branchId);
+    }
 
-        this.products.put(new RunningShoe("P011", BrandType.NIKE), 50);
-        this.products.put(new RunningShoe("P012", BrandType.ADIDAS), 50);
+    private Product createProduct(String productId, String type, BrandType brand, double price) {
+        switch (type) {
+            case "Jean":
+                return new Jean(productId, brand, price);
+            case "Shorts":
+                return new Shorts(productId, brand, price);
+            case "LongShirt":
+                return new LongShirt(productId, brand, price);
+            case "TShirt":
+                return new TShirt(productId, brand, price);
+            case "Bra":
+                return new Bra(productId, brand, price);
+            case "Boxer":
+                return new Boxer(productId, brand, price);
+            case "RunningShoe":
+                return new RunningShoe(productId, brand, price);
+            case "Sneaker":
+                return new Sneaker(productId, brand, price);
+            default:
+                System.out.println("Unknown product type: " + type);
+                return null;
+        }
+    }
+
+    public String getReportByBranch() {
+        String message;
+
+        if (sellRecord.size() == 0)
+            message = "No record";
+        else
+            message = sellRecord.toString();
+
+        return "Branch: " + name + "|"
+                + "Sell Record:|" + message;
+    }
+
+    public String getReportByCategory() {
+        return "";
+
+    }
+
+    public String getReportByProduct() {
+        return "";
     }
 
     public String getBranchId() {
@@ -138,7 +183,7 @@ public class StoreBranch {
         return sellRecord;
     }
 
-    public synchronized void sell(Customer customer) {
+    public synchronized double sell(Customer customer) {
         double sum = 0;
         Map<Product, Integer> shoppingList = customer.getShoppingList();
 
@@ -175,6 +220,8 @@ public class StoreBranch {
                 + " discount.");
         System.out.println("Original price: $" + String.format("%.2f", sum));
         System.out.println("Final price: $" + String.format("%.2f", finalPrice));
+
+        return finalPrice;
     }
 
     public void displayProducts() {
@@ -183,9 +230,5 @@ public class StoreBranch {
             if (entry.getValue() > 0)
                 System.out.println("Product: '" + entry.getKey() + "' - Quantity: " + entry.getValue());
         }
-    }
-
-    public void updateProductQuantity(Product product, int quantity) {
-        products.put(product, quantity);
     }
 }

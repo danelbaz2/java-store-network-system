@@ -134,7 +134,8 @@ private Queue<Customer> customerQueue = new LinkedList<>();
 
 public void generateCustomerQueue(int size) {
     for (int i = 0; i < size; i++) {
-        Customer c = createRandomCustomer();  // Random type
+        Customer c = createRandomCustomer();
+        Logger.write("Customer added: " + c.getName());  // Random type
         customerQueue.add(c);
     }
 }
