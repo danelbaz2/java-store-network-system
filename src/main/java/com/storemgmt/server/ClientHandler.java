@@ -272,11 +272,11 @@ public class ClientHandler implements Runnable {
                             .append(" (").append(qty)
                             .append(" units) - $")
                             .append(p.getPrice())
-                            .append("\n");
+                            .append("\\n"); // Escaped newline - will be unescaped on client
                 }
             }
 
-            return "OK|Inventory for " + branch.getName() + "|inventory:" + inventory.toString();
+            return "OK|Inventory for " + branch.getName() + "|" + inventory.toString();
         }
     }
 
@@ -309,13 +309,9 @@ public class ClientHandler implements Runnable {
         // Mark this cashier as busy BEFORE submitting to pool
         branch.setCashierBusy(cashierId, true);
 
-        // Create the handler and submit to thread pool (async - returns immediately!)
         CustomerHandler handler = new CustomerHandler(customer, branch, cashierId);
         branch.submitCustomerForCheckout(handler);
 
-        Logger.write("Cashier " + cashierId + " started checkout for: " + customer.getFullName());
-
-        // Return immediately - client is FREE to do other things!
         return "OK|Started serving: (" + customer.getClass().getSimpleName() + ") " + customer.getFullName()
                 + "|Customers remaining in queue: " + branch.getQueueSize();
     }

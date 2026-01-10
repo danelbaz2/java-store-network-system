@@ -29,7 +29,7 @@ public class CustomerHandler implements Runnable {
             Thread.sleep(2000 + (int) (Math.random() * 3000));
 
             // Execute the actual sale (synchronized in StoreBranch)
-            double total = branch.sell(customer);
+            double total = branch.sell(customer, cashierId);
 
             Logger.write("Cashier " + cashierId +
                     " completed sale for: " + customer.getFullName() +

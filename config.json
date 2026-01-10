@@ -43,6 +43,13 @@
       "branchId": "BR01",
       "role": "CASHIER",
       "password": "Aa123456!"
+    },
+    "E002": {
+      "fullName": "Danilov",
+      "phone": "0500000000",
+      "branchId": "BR01",
+      "role": "ADMIN",
+      "password": "Aa123456!"
     }
   },
   "products": {
@@ -56,25 +63,25 @@
       "type": "Shorts",
       "brand": "NIKE",
       "price": 79.99,
-      "stock": 40
+      "stock": 50
     },
     "P003": {
       "type": "LongShirt",
       "brand": "POLO",
       "price": 129.99,
-      "stock": 45
+      "stock": 50
     },
     "P004": {
       "type": "TShirt",
       "brand": "NIKE",
       "price": 49.99,
-      "stock": 60
+      "stock": 50
     },
     "P005": {
       "type": "Bra",
       "brand": "NIKE",
       "price": 149.99,
-      "stock": 35
+      "stock": 50
     },
     "P006": {
       "type": "Boxer",
@@ -86,13 +93,13 @@
       "type": "RunningShoe",
       "brand": "NIKE",
       "price": 499.99,
-      "stock": 25
+      "stock": 50
     },
     "P008": {
       "type": "Sneaker",
       "brand": "ADIDAS",
       "price": 329.99,
-      "stock": 5
+      "stock": 50
     }
   },
   "branches": {

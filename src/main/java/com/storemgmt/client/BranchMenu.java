@@ -96,31 +96,20 @@ public class BranchMenu {
     private void showReportByBranch() {
         String msg = "SHOW_REPORT_BY_BRANCH|" + client.getBranchId();
         String[] response = client.send(msg);
-        if (response[0].equals("OK")) {
-            System.out.println(response[1] + "\n" + response[2] + "\n" + response[3]);
-        } else {
-            System.out.println(response[1]);
-        }
+        printResponse(response);
+
     }
 
     private void showReportByCategory() {
         String msg = "SHOW_REPORT_BY_CATEGORY|" + client.getBranchId();
         String[] response = client.send(msg);
-        if (response[0].equals("OK")) {
-            System.out.println(response[1]);
-        } else {
-            System.out.println(response[1]);
-        }
+        printResponse(response);
     }
 
     private void showReportByProduct() {
         String msg = "SHOW_REPORT_BY_PRODUCT|" + client.getBranchId();
         String[] response = client.send(msg);
-        if (response[0].equals("OK")) {
-            System.out.println(response[1]);
-        } else {
-            System.out.println(response[1]);
-        }
+        printResponse(response);
     }
 
     private void updateInventory() throws IOException {
@@ -138,12 +127,7 @@ public class BranchMenu {
                 + "|quantity:" + quantity;
 
         String[] response = client.send(msg);
-
-        if (response[0].equals("OK")) {
-            System.out.println("Inventory updated successfully!");
-        } else {
-            System.out.println(response[1]);
-        }
+        printResponse(response);
     }
 
     private String readProductId() throws IOException {
@@ -289,35 +273,15 @@ public class BranchMenu {
             System.out.println("  Welcome, " + employeeName + "!");
             return true;
         } else {
-            System.out.println(response[1]);
+            printResponse(response);
             return false;
         }
     }
 
     private void viewInventory() {
         String msg = "GET_INVENTORY|" + client.getBranchId();
-
         String[] response = client.send(msg);
-
-        if (response == null || response.length == 0) {
-            System.out.println("No response from server");
-            return;
-        }
-
-        if (response[0].equals("OK") && response.length > 1) {
-            HashMap<String, String> data = BranchClient.getData(response);
-            System.out.println(response[1]);
-            System.out.println("-----------------------------------");
-
-            String inventory = data.get("inventory");
-            if (inventory != null) {
-                System.out.println(inventory.replace("\\n", "\n")); // Replace escaped newlines with real newlines
-            }
-        } else if (response.length > 1) {
-            System.out.println(response[1]);
-        } else {
-            System.out.println("Invalid response from server");
-        }
+        printResponse(response);
     }
 
     private void sell() throws IOException {
@@ -329,9 +293,7 @@ public class BranchMenu {
         String msg = "SELL|" + client.getBranchId();
 
         String[] response = client.send(msg);
-
-        for (String line : response)
-            System.out.println(line);
+        printResponse(response);
     }
 
     private void viewEmployees() {
@@ -352,7 +314,7 @@ public class BranchMenu {
                 System.out.println(employees.replace("\\n", "\n")); // Replace escaped newlines with real newlines
             }
         } else {
-            System.out.println(response[1]);
+            printResponse(response);
         }
     }
 
@@ -367,7 +329,7 @@ public class BranchMenu {
 
         String msg = "SEND_MESSAGE|" + client.getBranchId() + "|message:" + message;
         String[] response = client.send(msg);
-        System.out.println(response[1]);
+        printResponse(response);
     }
 
     private void logout() {
@@ -378,13 +340,11 @@ public class BranchMenu {
 
         String msg = "LOGOUT|" + client.getBranchId();
         String[] response = client.send(msg);
+        printResponse(response);
 
         if (response[0].equals("OK")) {
-            System.out.println(response[1]);
             employeeName = null;
             role = null;
-        } else {
-            System.out.println(response[1]);
         }
     }
 
@@ -484,5 +444,25 @@ public class BranchMenu {
             }
             System.out.println("  " + validationResult + ". Please try again.");
         }
+    }
+
+    private void printResponse(String[] response) {
+        if (response == null || response.length == 0) {
+            System.out.println("No response from server");
+            return;
+        }
+
+        if (response.length == 1) {
+            System.out.println(response[0]);
+            return;
+        }
+
+        if (response.length == 2) {
+            System.out.println(response[1]);
+            return;
+        }
+
+        for (int i = 1; i < response.length; i++)
+            System.out.println(response[i].replace("\\n", "\n"));
     }
 }

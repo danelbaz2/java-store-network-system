@@ -1,6 +1,7 @@
 package com.storemgmt.model.product;
 
 import java.util.Objects;
+import java.util.Set;
 
 import com.storemgmt.utils.JsonLoader;
 
@@ -41,39 +42,38 @@ public abstract class Product {
     private static int productCounter = 1000;
 
     public static Product getRandomProduct() {
-        Product retVal = null;
-        int random = (int) (Math.random() * 8) + 1;
-        BrandType randomBrand = BrandType.values()[(int) (Math.random() * BrandType.values().length)];
+        // Pick a random product from config.json
+        Set<String> productIds = JsonLoader.getKeys("products");
+        String[] ids = productIds.toArray(new String[0]);
+        String randomId = ids[(int) (Math.random() * ids.length)];
+
+        String type = JsonLoader.getString("products." + randomId + ".type");
+        String brand = JsonLoader.getString("products." + randomId + ".brand");
+        double price = JsonLoader.getDouble("products." + randomId + ".price");
+
+        BrandType brandType = BrandType.valueOf(brand);
         String productId = "P" + (productCounter++);
 
-        switch (random) {
-            case 1:
-                retVal = new Jean(productId, randomBrand, getPriceByType("Jean"));
-                break;
-            case 2:
-                retVal = new Bra(productId, randomBrand, getPriceByType("Bra"));
-                break;
-            case 3:
-                retVal = new RunningShoe(productId, randomBrand, getPriceByType("RunningShoe"));
-                break;
-            case 4:
-                retVal = new LongShirt(productId, randomBrand, getPriceByType("LongShirt"));
-                break;
-            case 5:
-                retVal = new Shorts(productId, randomBrand, getPriceByType("Shorts"));
-                break;
-            case 6:
-                retVal = new TShirt(productId, randomBrand, getPriceByType("TShirt"));
-                break;
-            case 7:
-                retVal = new Boxer(productId, randomBrand, getPriceByType("Boxer"));
-                break;
-            case 8:
-                retVal = new Sneaker(productId, randomBrand, getPriceByType("Sneaker"));
-                break;
+        switch (type) {
+            case "Jean":
+                return new Jean(productId, brandType, price);
+            case "Bra":
+                return new Bra(productId, brandType, price);
+            case "RunningShoe":
+                return new RunningShoe(productId, brandType, price);
+            case "LongShirt":
+                return new LongShirt(productId, brandType, price);
+            case "Shorts":
+                return new Shorts(productId, brandType, price);
+            case "TShirt":
+                return new TShirt(productId, brandType, price);
+            case "Boxer":
+                return new Boxer(productId, brandType, price);
+            case "Sneaker":
+                return new Sneaker(productId, brandType, price);
+            default:
+                return null;
         }
-
-        return retVal;
     }
 
     private static double getPriceByType(String productType) {
@@ -106,6 +106,7 @@ public abstract class Product {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + " " + this.getBrand();
+        return "ProductType: " + this.productType + ", Brand: " + this.getBrand() + ", Price: " + this.getPrice()
+                + ", Purchased";
     }
 }

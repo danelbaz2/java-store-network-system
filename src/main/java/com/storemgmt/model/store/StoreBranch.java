@@ -27,6 +27,7 @@ public class StoreBranch {
     private static final int MAX_CASHIERS = 3;
     private ExecutorService cashierPool;
     private Map<String, Boolean> cashierBusyStatus;
+    private Map<String, Double> cashierSales; // Track revenue per cashier
 
     public StoreBranch(String branchId, String name) {
         this.branchId = branchId;
@@ -38,6 +39,7 @@ public class StoreBranch {
 
         cashierPool = Executors.newFixedThreadPool(MAX_CASHIERS);
         cashierBusyStatus = new HashMap<String, Boolean>();
+        cashierSales = new HashMap<String, Double>();
 
         initializeInventory();
         generateCustomers(10);
@@ -78,6 +80,11 @@ public class StoreBranch {
 
     private void initializeInventory() {
         for (String productId : JsonLoader.getKeys("products")) {
+            // 70% chance this branch carries this product
+            if (Math.random() > 0.7) {
+                continue;
+            }
+
             String type = JsonLoader.getString("products." + productId + ".type");
             String brand = JsonLoader.getString("products." + productId + ".brand");
             double price = JsonLoader.getDouble("products." + productId + ".price");
@@ -118,24 +125,68 @@ public class StoreBranch {
     }
 
     public String getReportByBranch() {
-        String message;
+        if (sellRecord.isEmpty()) {
+            return "BRANCH REPORT: " + name + "|No sales yet.";
+        }
 
-        if (sellRecord.size() == 0)
-            message = "No record";
-        else
-            message = sellRecord.toString();
+        int totalItems = 0;
+        double totalRevenue = 0;
 
-        return "Branch: " + name + "|"
-                + "Sell Record:|" + message;
+        for (Product p : sellRecord.keySet()) {
+            totalItems += sellRecord.get(p);
+        }
+
+        // Sum cashier sales (already includes discounts)
+        for (Double sales : cashierSales.values()) {
+            totalRevenue += sales;
+        }
+
+        String result = "BRANCH REPORT: " + name;
+        result += "|Total Sold: " + totalItems + " items";
+        result += "|Revenue: $" + String.format("%.2f", totalRevenue);
+
+        result += "|Cashier Sales:";
+        for (String cashierId : cashierSales.keySet()) {
+            result += "|" + cashierId + ": $" + String.format("%.2f", cashierSales.get(cashierId));
+        }
+
+        return result;
     }
 
     public String getReportByCategory() {
-        return "";
+        if (sellRecord.isEmpty()) {
+            return "CATEGORY REPORT: " + name + "|No sales yet.";
+        }
 
+        Map<ProductType, Integer> categories = new HashMap<>();
+
+        for (Product p : sellRecord.keySet()) {
+            ProductType category = p.getProductType();
+            int qty = sellRecord.get(p);
+            categories.put(category, categories.getOrDefault(category, 0) + qty);
+        }
+
+        String result = "CATEGORY REPORT: " + name;
+        for (ProductType category : categories.keySet()) {
+            result += "|" + category + ": " + categories.get(category) + " sold";
+        }
+
+        return result;
     }
 
     public String getReportByProduct() {
-        return "";
+        if (sellRecord.isEmpty()) {
+            return "PRODUCT REPORT: " + name + "|No sales yet.";
+        }
+
+        String result = "PRODUCT REPORT: " + name;
+
+        for (Product p : sellRecord.keySet()) {
+            int qty = sellRecord.get(p);
+            result += "|" + p.getClass().getSimpleName() + " (" + p.getBrand() + "): " + qty + " sold";
+        }
+
+        return result;
     }
 
     public String getBranchId() {
@@ -190,7 +241,9 @@ public class StoreBranch {
         return sellRecord;
     }
 
-    public synchronized double sell(Customer customer) {
+    public synchronized double sell(Customer customer, String cashierId) {
+
+        System.out.println("---------------- START SELLING ----------------");
         double sum = 0;
         Map<Product, Integer> shoppingList = customer.getShoppingList();
 
@@ -223,10 +276,17 @@ public class StoreBranch {
         }
 
         double finalPrice = sum * customer.getDiscount();
+
+        // Track cashier sales
+        double currentCashierTotal = cashierSales.getOrDefault(cashierId, 0.0);
+        cashierSales.put(cashierId, currentCashierTotal + finalPrice);
+
         System.out.println("Customer " + customer.getFullName() + " gets the " + customer.getClass().getSimpleName()
                 + " discount.");
         System.out.println("Original price: $" + String.format("%.2f", sum));
         System.out.println("Final price: $" + String.format("%.2f", finalPrice));
+
+        System.out.println("---------------- END SELLING ----------------");
 
         return finalPrice;
     }
