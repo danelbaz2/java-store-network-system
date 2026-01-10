@@ -11,8 +11,6 @@ public abstract class Customer {
 
     public abstract double getDiscount();
 
-    public abstract HashMap<Product, Integer> startBuying();
-
     public Customer(String fullName, String id, String phoneNum) {
         this.fullName = fullName;
         this.id = id;

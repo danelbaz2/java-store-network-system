@@ -1,7 +1,5 @@
 package com.storemgmt.model.customer;
 
-import java.util.HashMap;
-import com.storemgmt.model.product.Product;
 import com.storemgmt.utils.JsonLoader;
 
 public class ReturningCustomer extends Customer {
@@ -20,8 +18,4 @@ public class ReturningCustomer extends Customer {
         return super.toString() + this.getClass().getSimpleName();
     }
 
-    @Override
-    public HashMap<Product, Integer> startBuying() {
-        return null;
-    }
 }
