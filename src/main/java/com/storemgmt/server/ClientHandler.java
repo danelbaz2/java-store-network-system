@@ -285,26 +285,39 @@ public class ClientHandler implements Runnable {
             return "ERROR|Must be logged in to sell";
         }
 
-        synchronized (chain) {
-            StoreBranch branch = chain.getBranchById(branchId);
-            if (branch == null) {
-                return "ERROR|Branch not found";
-            }
+        StoreBranch branch = chain.getBranchById(branchId);
+        if (branch == null) {
+            return "ERROR|Branch not found";
+        }
 
-            // Get next customer from queue
-            Customer customer = branch.getNextCustomer();
+        String cashierId = currentEmployee.getEmployeeId();
+
+        // Check if this cashier is already serving a customer
+        if (branch.isCashierBusy(cashierId)) {
+            return "ERROR|You are already serving a customer! Please wait.";
+        }
+
+        // Get next customer from queue (synchronized access)
+        Customer customer;
+        synchronized (branch) {
+            customer = branch.getNextCustomer();
             if (customer == null) {
                 return "ERROR|No customers in queue";
             }
-            Logger.write("Customer served: " + customer.getFullName());
-
-            // Process the sale
-            double price = branch.sell(customer);
-
-            return "OK|Served: (" + customer.getClass().getSimpleName() + ") " + customer.getFullName() +
-                    "|Remaining Customers in queue: " + branch.getQueueSize() +
-                    "|Total Sale: " + String.format("%.2f", price) + "$";
         }
+
+        // Mark this cashier as busy BEFORE submitting to pool
+        branch.setCashierBusy(cashierId, true);
+
+        // Create the handler and submit to thread pool (async - returns immediately!)
+        CustomerHandler handler = new CustomerHandler(customer, branch, cashierId);
+        branch.submitCustomerForCheckout(handler);
+
+        Logger.write("Cashier " + cashierId + " started checkout for: " + customer.getFullName());
+
+        // Return immediately - client is FREE to do other things!
+        return "OK|Started serving: (" + customer.getClass().getSimpleName() + ") " + customer.getFullName()
+                + "|Customers remaining in queue: " + branch.getQueueSize();
     }
 
     private String handleGetEmployees() {

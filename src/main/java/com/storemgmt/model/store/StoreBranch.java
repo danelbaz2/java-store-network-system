@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.storemgmt.model.customer.Customer;
 import com.storemgmt.model.customer.NewCustomer;
@@ -21,6 +24,9 @@ public class StoreBranch {
     private LinkedList<Employee> employees;
     private Map<Product, Integer> sellRecord;
     private Queue<Customer> customerQueue;
+    private static final int MAX_CASHIERS = 3;
+    private ExecutorService cashierPool;
+    private Map<String, Boolean> cashierBusyStatus;
 
     public StoreBranch(String branchId, String name) {
         this.branchId = branchId;
@@ -29,6 +35,10 @@ public class StoreBranch {
         employees = new LinkedList<Employee>();
         sellRecord = new HashMap<Product, Integer>();
         customerQueue = new LinkedList<Customer>();
+
+        cashierPool = Executors.newFixedThreadPool(MAX_CASHIERS);
+        cashierBusyStatus = new HashMap<String, Boolean>();
+
         initializeInventory();
         generateCustomers(10);
     }
@@ -58,18 +68,15 @@ public class StoreBranch {
         System.out.println("  Generated " + count + " customers for branch " + branchId);
     }
 
-    // Get next customer from queue (or null if empty)
     public Customer getNextCustomer() {
         return customerQueue.poll();
     }
 
-    // Check how many customers are waiting
     public int getQueueSize() {
         return customerQueue.size();
     }
 
     private void initializeInventory() {
-        // Load products from JSON config
         for (String productId : JsonLoader.getKeys("products")) {
             String type = JsonLoader.getString("products." + productId + ".type");
             String brand = JsonLoader.getString("products." + productId + ".brand");
@@ -229,6 +236,40 @@ public class StoreBranch {
         for (Map.Entry<Product, Integer> entry : products.entrySet()) {
             if (entry.getValue() > 0)
                 System.out.println("Product: '" + entry.getKey() + "' - Quantity: " + entry.getValue());
+        }
+    }
+
+    // ============ Cashier Pool Management ============
+
+    // return true if the cashier is busy, false if he's not in the map
+    public boolean isCashierBusy(String employeeId) {
+        return cashierBusyStatus.getOrDefault(employeeId, false);
+    }
+
+    /**
+     * Set the busy status of a cashier
+     */
+    public void setCashierBusy(String employeeId, boolean busy) {
+        cashierBusyStatus.put(employeeId, busy);
+    }
+
+    /**
+     * Submit a customer checkout task to the cashier pool
+     */
+    public void submitCustomerForCheckout(Runnable customerHandler) {
+        cashierPool.execute(customerHandler);
+    }
+
+    /**
+     * Shutdown the cashier pool gracefully (call when server shuts down)
+     */
+    public void shutdown() {
+        System.out.println("Sorry, we are closing down for the day. Please come back tomorrow.");
+        cashierPool.shutdown();
+        try {
+            cashierPool.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }

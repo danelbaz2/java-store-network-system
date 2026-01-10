@@ -71,12 +71,6 @@ public class BranchMenu {
                 default:
                     System.out.println("Invalid option!\n");
             }
-
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -332,17 +326,12 @@ public class BranchMenu {
             return;
         }
 
-        // System.out.print("Product type (Jean/LongShirt/Bra/RunningShoe): ");
-        // String productType = console.readLine();
-        // System.out.print("Brand (NIKE/ADIDAS/LEVIS/BERSHKA/POLO): ");
-        // String brand = console.readLine();
-        // System.out.print("Quantity: ");
-        // String qty = console.readLine();
-
         String msg = "SELL|" + client.getBranchId();
 
         String[] response = client.send(msg);
-        System.out.println(response[1] + "\n" + response[2] + "\n" + response[3]);
+
+        for (String line : response)
+            System.out.println(line);
     }
 
     private void viewEmployees() {
