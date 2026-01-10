@@ -33,7 +33,7 @@ public class BranchClient {
             in = new DataInputStream(socket.getInputStream());
             connected = true;
             System.out.println("Connected!\n");
-            return true;
+            return connected;
         } catch (IOException e) {
             System.out.println("Failed to connect: " + e.getMessage());
             return false;
