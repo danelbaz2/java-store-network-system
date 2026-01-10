@@ -7,6 +7,8 @@ public class Employee {
     private String branchId;
     private Role role;
     private String password;
+    private boolean available = true;
+
 
     public Employee(String employeeId, String fullName, String phone, String branchId, Role role, String password) {
         this.employeeId = employeeId;
@@ -44,6 +46,15 @@ public class Employee {
     public void setPassword(String newPassword) {
         this.password = newPassword;
     }
+
+    public boolean isAvailable() {
+    return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
+
 
     @Override
     public String toString() {

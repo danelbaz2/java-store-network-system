@@ -19,7 +19,20 @@ public class BranchMenu {
     public BranchMenu(BranchClient client) {
         this.client = client;
         this.console = new DataInputStream(System.in);
+
+        client.setOnChatMessage(() -> {
+            System.out.print("\n--- New message received! Press Enter to refresh --- ");    
+        });
     }
+    
+    private void printMenu() {
+        if ("ADMIN".equals(role)) {
+            printAdminMenu();
+        } else {
+            printRegularMenu();
+        }
+    }
+
 
     public void run() throws IOException {
 
@@ -65,6 +78,13 @@ public class BranchMenu {
                 case "9":
                     reportManagement();
                     break;
+                case "10":
+                    requestChat();
+                    break;
+                case "11":
+                    sendMessage();
+                    break;
+
                 case "0":
                     System.out.println("Goodbye!");
                     return;
@@ -252,6 +272,7 @@ public class BranchMenu {
         System.out.println("3. View Employees");
         System.out.println("4. Send Chat");
         System.out.println("5. Logout");
+        System.out.println("11. Send Message");
         System.out.println("0. Exit");
         System.out.println("========================================");
     }
@@ -272,6 +293,8 @@ public class BranchMenu {
         System.out.println("7. Remove Employee");
         System.out.println("8. Update Inventory");
         System.out.println("9. View Sell Report");
+        System.out.println("10. Request Chat (find available employee)");
+        System.out.println("11. Send Message");
         System.out.println("0. Exit");
         System.out.println("========================================");
     }
@@ -293,6 +316,7 @@ public class BranchMenu {
             role = data.get("role");
             System.out.println("\n" + response[1]);
             System.out.println("  Welcome, " + employeeName + "!");
+            client.startListening();
             return true;
         } else {
             System.out.println(response[1]);
@@ -367,19 +391,49 @@ public class BranchMenu {
         }
     }
 
+    private void requestChat() {
+        if (employeeName == null) {
+            System.out.println("Please login first!");
+            return;
+        }
+
+        String msg = "REQUEST_CHAT|" + client.getBranchId();
+        String[] response = client.send(msg);
+
+        if (response != null && response.length > 1) {
+            System.out.println(response[1]);
+        } else {
+            System.out.println("No response from server");
+        }
+    }
+
     private void sendChat() throws IOException {
         if (employeeName == null) {
             System.out.println("Please login first!");
             return;
         }
 
+        System.out.print("Enter target employee ID: ");
+        String targetEmployeeId = console.readLine().toUpperCase();
+
         System.out.print("Enter message: ");
         String message = console.readLine();
 
-        String msg = "SEND_MESSAGE|" + client.getBranchId() + "|message:" + message;
+        String msg =
+            "OPEN_CHAT|" + client.getBranchId()
+            + "|from:" + client.getEmployeeId()
+            + "|to:" + targetEmployeeId
+            + "|message:" + message;
+
         String[] response = client.send(msg);
-        System.out.println(response[1]);
+
+        if (response.length > 1) {
+            System.out.println(response[1]);
+        } else {
+            System.out.println(response[0]);
+        }
     }
+
 
     private void logout() {
         if (employeeName == null) {
@@ -483,6 +537,23 @@ public class BranchMenu {
             }
         }
     }
+    
+    private void sendMessage() throws IOException {
+        System.out.print("Enter message: ");
+        String message = console.readLine();
+
+        String msg =
+            "SEND_MESSAGE|" + client.getBranchId()
+            + "|from:" + client.getEmployeeId()
+            + "|message:" + message;
+
+        String[] response = client.send(msg);
+
+        if (response.length > 1) {
+            System.out.println(response[1]);
+        }
+    }
+
 
     private String readPassword() throws IOException {
         System.out.println("  Password requirements: 8+ chars, uppercase, lowercase, digit");

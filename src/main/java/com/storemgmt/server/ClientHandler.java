@@ -7,6 +7,9 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.storemgmt.network.Message;
+import com.storemgmt.network.MessageType;
+import com.storemgmt.chat.ChatRequest;
 import com.storemgmt.model.customer.Customer;
 import com.storemgmt.model.employee.Employee;
 import com.storemgmt.model.employee.Role;
@@ -27,6 +30,9 @@ public class ClientHandler implements Runnable {
 
     private String branchId;
     private Employee currentEmployee;
+
+    private static final Map<String, ClientHandler> connectedClients = new HashMap<>();
+    private static final Map<String, String> activeChats = new HashMap<>();
 
     public ClientHandler(Socket socket, Chain chain, StoreServer server) {
         this.socket = socket;
@@ -103,6 +109,14 @@ public class ClientHandler implements Runnable {
                 return handleShowReportByCategory();
             case "SHOW_REPORT_BY_PRODUCT":
                 return handleShowReportByProduct();
+
+            // new 10.01.2026
+
+            case "OPEN_CHAT":
+                return handleOpenChat(data);
+            case "REQUEST_CHAT":
+                return handleRequestChat();
+
             default:
                 return "ERROR|Unknown action: " + action;
         }
@@ -211,6 +225,9 @@ public class ClientHandler implements Runnable {
             if (client == this)
                 continue;
 
+            if (client.currentEmployee == null)
+                continue;
+
             if (client.currentEmployee.getEmployeeId().equals(empId)) {
                 return "ERROR|Already logged in";
             }
@@ -231,6 +248,9 @@ public class ClientHandler implements Runnable {
                     if (emp.getPassword().equals(password)) {
                         currentEmployee = emp;
 
+                        // register this employee as connected
+                        connectedClients.put(emp.getEmployeeId(), this);
+
                         return "OK|Login successful" +
                                 "|employeeName:" + emp.getFullName() +
                                 "|role:" + emp.getRole();
@@ -247,6 +267,9 @@ public class ClientHandler implements Runnable {
         if (currentEmployee == null) {
             return "ERROR|Not logged in";
         }
+
+        connectedClients.remove(currentEmployee.getEmployeeId());
+        activeChats.remove(currentEmployee.getEmployeeId());
 
         String name = currentEmployee.getFullName();
         currentEmployee = null;
@@ -332,17 +355,77 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private String handleSendMessage(HashMap<String, String> data) {
+        private String handleRequestChat() {
         if (currentEmployee == null) {
-            return "ERROR|Must be logged in to chat";
+            return "ERROR|Must be logged in to request chat";
         }
 
+        // Create a new chat request for the current employee
+        ChatRequest request = new ChatRequest(
+                currentEmployee.getEmployeeId(),
+                branchId
+        );
+
+        // Add the request to the server-side queue
+        server.getChatQueue().add(request);
+
+        return "OK|No available employees. You were added to the chat queue";
+    }
+
+
+    private String handleSendMessage(HashMap<String, String> data) {
+
+        String fromId = data.get("from");
         String message = data.get("message");
-        if (message == null || message.isEmpty()) {
-            return "ERROR|Empty message";
+
+        String chatId = activeChats.get(fromId);
+        if (chatId == null) {
+            return "ERROR|No active chat";
         }
+
+        String[] parts = chatId.split("_");
+        String targetId = parts[0].equals(fromId) ? parts[1] : parts[0];
+
+        ClientHandler targetHandler = connectedClients.get(targetId);
+        if (targetHandler == null) {
+            return "ERROR|Chat partner disconnected";
+        }
+
+        targetHandler.out.println(
+            "CHAT|" + fromId + ": " + message
+        );
+        targetHandler.out.flush();
 
         return "OK|Message sent";
+    }
+
+    private String handleOpenChat(HashMap<String, String> data) {
+
+        if (currentEmployee == null) {
+            return "ERROR|Must be logged in to open chat";
+        }
+
+        String fromId = data.get("from");
+        String toId = data.get("to");
+        String message = data.get("message");
+
+        if (fromId == null || toId == null || message == null) {
+            return "ERROR|Missing chat data";
+        }
+
+        ClientHandler targetHandler = connectedClients.get(toId);
+        if (targetHandler == null) {
+            return "ERROR|Target employee not connected";
+        }
+
+        String chatKey = fromId + "_" + toId;
+        activeChats.put(fromId, chatKey);
+        activeChats.put(toId, chatKey);
+
+        targetHandler.out.println("CHAT|System: Chat started with " + fromId + ". Message: " + message);
+        targetHandler.out.flush();
+
+        return "OK|Chat started with employee " + toId;
     }
 
     private void cleanup() {

@@ -1,6 +1,8 @@
 package com.storemgmt.client;
 
 import com.storemgmt.utils.JsonLoader;
+import com.storemgmt.network.Message;
+import com.storemgmt.network.MessageType;
 
 import java.io.IOException;
 import java.nio.file.Paths;

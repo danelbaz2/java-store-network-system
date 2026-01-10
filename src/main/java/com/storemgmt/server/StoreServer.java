@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import com.storemgmt.chat.ChatQueue;
 import com.storemgmt.model.store.Chain;
 
 /**
@@ -23,6 +24,8 @@ public class StoreServer {
     private final int port; // Port to listen on
     private ServerSocket serverSocket; // The server socket
     private boolean running; // Flag to control server loop
+    private final ChatQueue chatQueue = new ChatQueue();
+
 
     // List of all connected clients (thread-safe list)
     private final ArrayList<ClientHandler> connectedClients;
@@ -100,4 +103,9 @@ public class StoreServer {
     public Chain getChain() {
         return chain;
     }
+
+    public ChatQueue getChatQueue() {
+    return chatQueue;
+    }
+
 }

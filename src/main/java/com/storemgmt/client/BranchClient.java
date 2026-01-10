@@ -16,6 +16,9 @@ public class BranchClient {
     private DataInputStream in;
     private PrintStream out;
     private boolean connected;
+    private Runnable onChatMessage;
+    private volatile boolean chatMessageReceived = false;
+
 
     public BranchClient(String host, int port, String branchId) {
         this.host = host;
@@ -51,7 +54,7 @@ public class BranchClient {
             out.println(message);
             out.flush();
 
-            String response = in.readLine();
+            String response = in.readLine(); // response ONLY
             return parseResponse(response);
 
         } catch (Exception e) {
@@ -59,6 +62,7 @@ public class BranchClient {
             return new String[] { "ERROR", e.getMessage() };
         }
     }
+
 
     // Parse response: OK|message|key1:value1|key2:value2
     private String[] parseResponse(String line) {
@@ -95,6 +99,34 @@ public class BranchClient {
         }
     }
 
+    public void startListening() {
+        Thread listener = new Thread(() -> {
+            try {
+                while (connected) {
+                    String line = in.readLine();
+                    if (line == null) break;
+
+                if (line.startsWith("CHAT|")) {
+                    System.out.println("\n[New Message] " + line.substring(5));               
+                    chatMessageReceived = true; 
+                    if (onChatMessage != null) {
+                        onChatMessage.run(); 
+                    }
+                }
+                }
+            } catch (IOException e) {
+                System.out.println("Connection closed.");
+            }
+        });
+
+        listener.setDaemon(true);
+        listener.start();
+    }
+
+    public void setOnChatMessage(Runnable callback) {
+        this.onChatMessage = callback;
+    }
+
     public String getBranchId() {
         return branchId;
     }
@@ -110,4 +142,14 @@ public class BranchClient {
     public void setEmployeeId(String employeeId) {
         this.employeeId = employeeId;
     }
+
+    public boolean isChatMessageReceived() {
+        return chatMessageReceived;
+    }
+
+    public void clearChatMessageFlag() {
+        chatMessageReceived = false;
+    }
+
+    
 }
