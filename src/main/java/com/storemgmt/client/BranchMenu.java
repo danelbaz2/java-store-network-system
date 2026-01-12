@@ -15,13 +15,26 @@ public class BranchMenu {
     private DataInputStream console;
     private String employeeName;
     private String role;
+    private volatile boolean waitingForReplyDecision = false;
 
     public BranchMenu(BranchClient client) {
         this.client = client;
         this.console = new DataInputStream(System.in);
 
         client.setOnChatMessage(() -> {
-            System.out.print("\n--- New message received! Press Enter to refresh --- ");    
+        if (employeeName != null) {
+                System.out.println("\nDo you want to reply? (Y/N):"); 
+                waitingForReplyDecision = true;
+            }
+        });
+
+        client.setOnChatEnded(() -> {
+            try {
+                Thread.sleep(100); 
+            } catch (InterruptedException e) {}
+            
+            printMenu(); 
+            System.out.print("Choose option: "); 
         });
     }
     
@@ -49,6 +62,23 @@ public class BranchMenu {
             }
             System.out.print("Choose option: ");
             String input = console.readLine();
+
+            if (waitingForReplyDecision) 
+            {
+                waitingForReplyDecision = false; 
+
+                if (input.equalsIgnoreCase("Y")) {
+                    sendMessage();
+                } 
+                else if (input.equalsIgnoreCase("N")) {
+                    endChat(); 
+                }
+                else{
+                    System.out.println("  > Error: Invalid input '" + input + "'. Please enter only Y or N.");
+                    System.out.print("Do you want to reply? (Y/N): ");
+                }
+                continue; 
+            }
 
             switch (input) {
                 case "1":
@@ -84,7 +114,6 @@ public class BranchMenu {
                 case "11":
                     sendMessage();
                     break;
-
                 case "0":
                     System.out.println("Goodbye!");
                     return;
@@ -565,6 +594,17 @@ public class BranchMenu {
                 return input;
             }
             System.out.println("  " + validationResult + ". Please try again.");
+        }
+    }
+
+    private void endChat() {
+        System.out.println("Closing chat...");
+        String msg = "END_CHAT|" + client.getBranchId() 
+                   + "|from:" + client.getEmployeeId();
+        
+        String[] response = client.send(msg);
+        if (response.length > 1) {
+            System.out.println(response[1]);
         }
     }
 }

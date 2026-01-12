@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class BranchClient {
 
@@ -18,6 +21,9 @@ public class BranchClient {
     private boolean connected;
     private Runnable onChatMessage;
     private volatile boolean chatMessageReceived = false;
+    private final BlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
+    private volatile boolean isListening = false; 
+    private Runnable onChatEnded; 
 
 
     public BranchClient(String host, int port, String branchId) {
@@ -45,17 +51,24 @@ public class BranchClient {
 
     // Format: ACTION|branchId|k1:v1|k2:v2|...
 
-    public String[] send(String message) {
+public String[] send(String message) {
+        String response = "";
         if (!connected) {
             return new String[] { "ERROR", "Not connected" };
         }
 
         try {
             out.println(message);
-            out.flush();
 
-            String response = in.readLine(); // response ONLY
+            if (isListening) {
+                 response = responseQueue.poll(5, TimeUnit.SECONDS);
+            } else {
+                 response = in.readLine();
+
+            }
             return parseResponse(response);
+
+
 
         } catch (Exception e) {
             connected = false;
@@ -100,22 +113,40 @@ public class BranchClient {
     }
 
     public void startListening() {
+        isListening = true; 
+
         Thread listener = new Thread(() -> {
             try {
-                while (connected) {
-                    String line = in.readLine();
-                    if (line == null) break;
+                String line;
+                while (connected && (line = in.readLine()) != null) 
+                {                    
+                    if (line.startsWith("CHAT|")) 
+                    {
+                        String msgContent = line.substring(5);
+                        System.out.println("\n[CHAT] " + msgContent);        
+                        chatMessageReceived = true; 
+                        if (onChatMessage != null && !msgContent.startsWith("System: Chat started")) {
+                            onChatMessage.run();
+                        }
+                    }
+                    else if (line.startsWith("CHAT_ENDED|")) {
+                        System.out.println("\n[Chat] " + line.substring(11));
 
-                if (line.startsWith("CHAT|")) {
-                    System.out.println("\n[New Message] " + line.substring(5));               
-                    chatMessageReceived = true; 
-                    if (onChatMessage != null) {
-                        onChatMessage.run(); 
+                        if (onChatEnded != null) {
+                            onChatEnded.run();
+                        }
+                    }
+                    else{
+                        responseQueue.offer(line);
                     }
                 }
-                }
             } catch (IOException e) {
+                if (connected) {
                 System.out.println("Connection closed.");
+                }
+            }
+            finally {
+                isListening = false;
             }
         });
 
@@ -133,6 +164,10 @@ public class BranchClient {
 
     public boolean isConnected() {
         return connected;
+    }
+
+    public void setOnChatEnded(Runnable callback) {
+        this.onChatEnded = callback;
     }
 
     public String getEmployeeId() {

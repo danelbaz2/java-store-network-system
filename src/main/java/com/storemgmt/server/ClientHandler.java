@@ -7,6 +7,12 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.storemgmt.network.Message;
 import com.storemgmt.network.MessageType;
 import com.storemgmt.chat.ChatRequest;
@@ -33,6 +39,8 @@ public class ClientHandler implements Runnable {
 
     private static final Map<String, ClientHandler> connectedClients = new HashMap<>();
     private static final Map<String, String> activeChats = new HashMap<>();
+
+    private static final Map<String, Set<String>> chatRooms = new HashMap<>();
 
     public ClientHandler(Socket socket, Chain chain, StoreServer server) {
         this.socket = socket;
@@ -117,6 +125,11 @@ public class ClientHandler implements Runnable {
             case "REQUEST_CHAT":
                 return handleRequestChat();
 
+            // new 12.01.2026
+
+            case "END_CHAT":
+                return handleEndChat(data);
+
             default:
                 return "ERROR|Unknown action: " + action;
         }
@@ -172,6 +185,31 @@ public class ClientHandler implements Runnable {
             }
             return "OK|" + branch.getReportByProduct();
         }
+    }
+
+    private String handleEndChat(HashMap<String, String> data) {
+        String fromId = data.get("from");
+        
+        String chatId = activeChats.get(fromId);
+        if (chatId == null) {
+            return "OK|Chat already closed";
+        }
+
+        String[] parts = chatId.split("_");
+        String targetId = parts[0].equals(fromId) ? parts[1] : parts[0];
+
+        System.out.println("[Server Log] Chat ended: " + fromId + " disconnected from " + targetId);
+
+        ClientHandler targetHandler = connectedClients.get(targetId);
+        if (targetHandler != null) {
+            targetHandler.out.println("CHAT_ENDED|System: The chat was ended by " + fromId);
+            targetHandler.out.flush();
+        }
+
+        activeChats.remove(fromId);
+        activeChats.remove(targetId);
+
+        return "OK|Chat ended. Connection closed.";
     }
 
     private String handleAddEmployee(HashMap<String, String> data) {
@@ -422,7 +460,10 @@ public class ClientHandler implements Runnable {
         activeChats.put(fromId, chatKey);
         activeChats.put(toId, chatKey);
 
-        targetHandler.out.println("CHAT|System: Chat started with " + fromId + ". Message: " + message);
+        targetHandler.out.println("CHAT|System: Chat started with " + fromId);
+    
+        targetHandler.out.println("CHAT|" + message);
+        
         targetHandler.out.flush();
 
         return "OK|Chat started with employee " + toId;
