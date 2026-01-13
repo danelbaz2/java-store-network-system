@@ -1,9 +1,12 @@
 package com.storemgmt.server;
 
 import java.io.DataInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
+import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -98,11 +101,11 @@ public class ClientHandler implements Runnable {
             case "UPDATE_INVENTORY":
                 return handleUpdateInventory(data);
             case "SHOW_REPORT_BY_BRANCH":
-                return handleShowReportByBranch();
+                return handleShowReport("branch");
             case "SHOW_REPORT_BY_CATEGORY":
-                return handleShowReportByCategory();
+                return handleShowReport("category");
             case "SHOW_REPORT_BY_PRODUCT":
-                return handleShowReportByProduct();
+                return handleShowReport("product");
             default:
                 return "ERROR|Unknown action: " + action;
         }
@@ -130,33 +133,71 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private String handleShowReportByBranch() {
-        synchronized (chain) {
-            StoreBranch branch = chain.getBranchById(branchId);
-            if (branch == null) {
-                return "ERROR|Branch not found: " + branchId;
-            }
-            return "OK|" + branch.getReportByBranch();
-        }
-    }
+    private String handleShowReport(String type) {
+        try {
+            synchronized (chain) {
+                String jsonFilename = Paths.get(System.getProperty("user.dir"), "reports",
+                        "report_" + LocalDate.now().toString() + "_by_" + type + ".json").toString();
+                FileWriter jsonWriter = new FileWriter(jsonFilename);
 
-    private String handleShowReportByCategory() {
-        synchronized (chain) {
-            StoreBranch branch = chain.getBranchById(branchId);
-            if (branch == null) {
-                return "ERROR|Branch not found: " + branchId;
-            }
-            return "OK|" + branch.getReportByCategory();
-        }
-    }
+                String wordFilename = Paths.get(System.getProperty("user.dir"), "reports",
+                        "report_" + LocalDate.now().toString() + "_by_" + type + ".doc").toString();
+                FileWriter wordWriter = new FileWriter(wordFilename);
 
-    private String handleShowReportByProduct() {
-        synchronized (chain) {
-            StoreBranch branch = chain.getBranchById(branchId);
-            if (branch == null) {
-                return "ERROR|Branch not found: " + branchId;
+                wordWriter.write("========================================\n");
+                wordWriter.write("        " + type.toUpperCase() + " SALES REPORT\n");
+                wordWriter.write("========================================\n\n");
+
+                StringBuilder returnString = new StringBuilder("OK|");
+                boolean firstBranch = true;
+
+                for (StoreBranch branch : chain.getBranches()) {
+                    if (firstBranch) {
+                        firstBranch = false;
+                        jsonWriter.append("[\n");
+                    } else {
+                        jsonWriter.append(",\n");
+                    }
+
+                    String branchReport;
+
+                    if (type == "category")
+                        branchReport = branch.getReportByCategory(jsonWriter);
+                    else if (type == "product")
+                        branchReport = branch.getReportByProduct(jsonWriter);
+                    else
+                        branchReport = branch.getReportByBranch(jsonWriter);
+
+                    returnString.append(branchReport);
+
+                    // Also write a nice version to Word
+                    wordWriter.write("Branch: " + branch.getName() + "\n");
+                    wordWriter.write("----------------------------------------\n");
+                    // Parse the pipe-separated report for Word
+                    String[] parts = branchReport.split("\\|");
+                    for (String part : parts) {
+                        if (!part.startsWith("CATEGORY REPORT:")) {
+                            wordWriter.write("  • " + part + "\n");
+                        }
+                    }
+
+                    wordWriter.write("\n");
+                }
+
+                jsonWriter.append("\n]");
+                jsonWriter.close();
+
+                wordWriter.write("========================================\n");
+                wordWriter.write("         END OF REPORT\n");
+                wordWriter.write("========================================\n");
+                wordWriter.close();
+
+                System.out.println("JSON report: " + jsonFilename);
+                System.out.println("Word report: " + wordFilename);
+                return returnString.toString();
             }
-            return "OK|" + branch.getReportByProduct();
+        } catch (Exception e) {
+            return "ERROR|" + e.getMessage();
         }
     }
 
@@ -207,8 +248,12 @@ public class ClientHandler implements Runnable {
         String empId = data.get("employeeId");
         String password = data.get("password");
 
+        // check if the employee is already logged in
         for (ClientHandler client : server.getConnectedClients()) {
             if (client == this)
+                continue;
+
+            if (client.currentEmployee == null)
                 continue;
 
             if (client.currentEmployee.getEmployeeId().equals(empId)) {

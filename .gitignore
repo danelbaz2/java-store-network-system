@@ -7,3 +7,12 @@ logs.txt
 # Compiled classes
 *.class
 server_log.txt
+reports/~$port_2026-01-13_by_branch.doc
+reports/~$port_2026-01-13_by_category.doc
+reports/~$port_2026-01-13_by_product.doc
+reports/report_2026-01-13_by_branch.doc
+reports/report_2026-01-13_by_branch.json
+reports/report_2026-01-13_by_category.doc
+reports/report_2026-01-13_by_category.json
+reports/report_2026-01-13_by_product.doc
+reports/report_2026-01-13_by_product.json

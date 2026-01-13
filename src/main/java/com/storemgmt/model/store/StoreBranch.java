@@ -1,5 +1,9 @@
 package com.storemgmt.model.store;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -16,6 +20,7 @@ import com.storemgmt.model.employee.Employee;
 import com.storemgmt.model.product.*;
 import com.storemgmt.utils.JsonLoader;
 import com.google.gson.JsonParser;
+import java.time.LocalDate;
 
 public class StoreBranch {
     private String branchId;
@@ -124,8 +129,9 @@ public class StoreBranch {
         }
     }
 
-    public String getReportByBranch() {
+    public String getReportByBranch(FileWriter writer) {
         if (sellRecord.isEmpty()) {
+            saveReportToJson(new HashMap<>(), writer);
             return "BRANCH REPORT: " + name + "|No sales yet.";
         }
 
@@ -150,11 +156,17 @@ public class StoreBranch {
             result += "|" + cashierId + ": $" + String.format("%.2f", cashierSales.get(cashierId));
         }
 
+        Map<Object, Object> salesMap = new HashMap<>();
+        salesMap.put("totalItems", (double) totalItems);
+        salesMap.put("totalRevenue", totalRevenue);
+        saveReportToJson(salesMap, writer);
+
         return result;
     }
 
-    public String getReportByCategory() {
+    public String getReportByCategory(FileWriter writer) {
         if (sellRecord.isEmpty()) {
+            saveReportToJson(new HashMap<>(), writer);
             return "CATEGORY REPORT: " + name + "|No sales yet.";
         }
 
@@ -171,22 +183,45 @@ public class StoreBranch {
             result += "|" + category + ": " + categories.get(category) + " sold";
         }
 
+        Map<Object, Object> categoriesMap = new HashMap<>();
+        categoriesMap.putAll(categories);
+        saveReportToJson(categoriesMap, writer);
+
         return result;
     }
 
-    public String getReportByProduct() {
+    public String getReportByProduct(FileWriter writer) {
         if (sellRecord.isEmpty()) {
+            saveReportToJson(new HashMap<>(), writer);
             return "PRODUCT REPORT: " + name + "|No sales yet.";
         }
 
         String result = "PRODUCT REPORT: " + name;
+        Map<Object, Object> productsMap = new HashMap<>();
 
         for (Product p : sellRecord.keySet()) {
             int qty = sellRecord.get(p);
+            productsMap.put(p.getClass().getSimpleName(), qty);
             result += "|" + p.getClass().getSimpleName() + " (" + p.getBrand() + "): " + qty + " sold";
         }
 
+        saveReportToJson(productsMap, writer);
+
         return result;
+    }
+
+    public void saveReportToJson(Map<Object, Object> salesMap, FileWriter writer) {
+        try {
+            writer.append("  {\n");
+            writer.append("    \"Branch Name\": \"" + name + "\",\n");
+
+            for (Object key : salesMap.keySet())
+                writer.append("    \"" + key + "\": " + salesMap.get(key) + ",\n");
+
+            writer.append("  }");
+        } catch (IOException e) {
+            System.out.println("Error saving report: " + e.getMessage());
+        }
     }
 
     public String getBranchId() {
