@@ -213,12 +213,12 @@ public class StoreBranch {
     public void saveReportToJson(Map<Object, Object> salesMap, FileWriter writer) {
         try {
             writer.append("  {\n");
-            writer.append("    \"Branch Name\": \"" + name + "\",\n");
+            writer.append("    \"Branch Name\": \"" + name + "\"");
 
             for (Object key : salesMap.keySet())
-                writer.append("    \"" + key + "\": " + salesMap.get(key) + ",\n");
+                writer.append(",\n" + "    \"" + key + "\": " + salesMap.get(key));
 
-            writer.append("  }");
+            writer.append("\n  }");
         } catch (IOException e) {
             System.out.println("Error saving report: " + e.getMessage());
         }

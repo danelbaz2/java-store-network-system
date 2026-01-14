@@ -170,6 +170,10 @@ public class ClientHandler implements Runnable {
     private String handleShowReport(String type) {
         try {
             synchronized (chain) {
+                // Create reports directory if it doesn't exist
+                java.nio.file.Path reportsDir = Paths.get(System.getProperty("user.dir"), "reports");
+                java.nio.file.Files.createDirectories(reportsDir);
+
                 String jsonFilename = Paths.get(System.getProperty("user.dir"), "reports",
                         "report_" + LocalDate.now().toString() + "_by_" + type + ".json").toString();
                 FileWriter jsonWriter = new FileWriter(jsonFilename);
@@ -202,7 +206,7 @@ public class ClientHandler implements Runnable {
                     else
                         branchReport = branch.getReportByBranch(jsonWriter);
 
-                    returnString.append(branchReport);
+                    returnString.append(branchReport).append("|");
 
                     // Also write a nice version to Word
                     wordWriter.write("Branch: " + branch.getName() + "\n");
