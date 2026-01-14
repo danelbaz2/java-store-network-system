@@ -17,6 +17,27 @@ public class BranchClient {
     private PrintStream out;
     private boolean connected;
 
+    // For synchronizing responses between listener thread and send()
+    private String pendingResponse = null;
+    private final Object responseLock = new Object();
+    private Thread listenerThread;
+
+    // Chat mode support
+    private boolean inChatMode = false;
+    private String chatPartnerId = null;
+    private ChatCallback chatCallback = null;
+
+    // Callback interface for chat events
+    public interface ChatCallback {
+        void onChatMessage(String fromEmployeeId, String message);
+
+        void onChatRequest(String fromEmployeeId, String fromName);
+
+        void onChatEnded(String byEmployeeId);
+
+        void onAvailabilityNotification(String targetEmployeeId);
+    }
+
     public BranchClient(String host, int port, String branchId) {
         this.host = host;
         this.port = port;
@@ -33,6 +54,59 @@ public class BranchClient {
             in = new DataInputStream(socket.getInputStream());
             connected = true;
             System.out.println("Connected!\n");
+
+            // Start listener thread to handle incoming messages
+            listenerThread = new Thread(() -> {
+                try {
+                    while (connected) {
+                        String line = in.readLine();
+                        if (line == null) {
+                            connected = false;
+                            break;
+                        }
+                        if (line.startsWith("CHAT_REQUEST|")) {
+                            // Someone wants to start a chat with us
+                            String[] parts = line.split("\\|");
+                            if (parts.length >= 3 && chatCallback != null) {
+                                String fromEmpId = parts[1];
+                                String fromName = parts[2];
+                                chatCallback.onChatRequest(fromEmpId, fromName);
+                            }
+                        } else if (line.startsWith("CHAT_MESSAGE|")) {
+                            // Received a chat message
+                            String[] parts = line.split("\\|", 3);
+                            if (parts.length >= 3 && chatCallback != null) {
+                                String fromEmpId = parts[1];
+                                String message = parts[2];
+                                chatCallback.onChatMessage(fromEmpId, message);
+                            }
+                        } else if (line.startsWith("CHAT_END|")) {
+                            // Chat partner ended the chat
+                            String[] parts = line.split("\\|");
+                            if (parts.length >= 2 && chatCallback != null) {
+                                chatCallback.onChatEnded(parts[1]);
+                            }
+                        } else if (line.startsWith("CHAT_AVAILABLE|")) {
+                            // Target employee is now available for chat
+                            String[] parts = line.split("\\|");
+                            if (parts.length >= 2 && chatCallback != null) {
+                                chatCallback.onAvailabilityNotification(parts[1]);
+                            }
+                        } else {
+                            // Regular response - notify waiting send()
+                            synchronized (responseLock) {
+                                pendingResponse = line;
+                                responseLock.notify();
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    if (connected)
+                        connected = false;
+                }
+            });
+            listenerThread.start();
+
             return connected;
         } catch (IOException e) {
             System.out.println("Failed to connect: " + e.getMessage());
@@ -40,27 +114,36 @@ public class BranchClient {
         }
     }
 
-    // Format: ACTION|branchId|k1:v1|k2:v2|...
-
     public String[] send(String message) {
         if (!connected) {
             return new String[] { "ERROR", "Not connected" };
         }
 
         try {
-            out.println(message);
-            out.flush();
+            synchronized (responseLock) {
+                pendingResponse = null;
 
-            String response = in.readLine();
-            return parseResponse(response);
+                out.println(message);
+                out.flush();
 
+                // Wait for response from listener thread
+                while (pendingResponse == null && connected) {
+                    responseLock.wait(30000); // 30 second timeout
+                    if (pendingResponse == null) {
+                        return new String[] { "ERROR", "Timeout" };
+                    }
+                }
+
+                return parseResponse(pendingResponse);
+            }
+        } catch (InterruptedException e) {
+            return new String[] { "ERROR", "Interrupted" };
         } catch (Exception e) {
             connected = false;
             return new String[] { "ERROR", e.getMessage() };
         }
     }
 
-    // Parse response: OK|message|key1:value1|key2:value2
     private String[] parseResponse(String line) {
         if (line == null) {
             return new String[] { "ERROR", "No response" };
@@ -68,10 +151,9 @@ public class BranchClient {
         return line.split("\\|");
     }
 
-    // Helper to get data from parsed response
     public static HashMap<String, String> getData(String[] parts) {
         HashMap<String, String> data = new HashMap<>();
-        for (int i = 2; i < parts.length; i++) {
+        for (int i = 1; i < parts.length; i++) {
             String[] kv = parts[i].split(":", 2);
             if (kv.length == 2) {
                 data.put(kv[0], kv[1]);
@@ -83,6 +165,8 @@ public class BranchClient {
     public void disconnect() {
         connected = false;
         try {
+            if (listenerThread != null)
+                listenerThread.interrupt();
             if (in != null)
                 in.close();
             if (out != null)
@@ -109,5 +193,25 @@ public class BranchClient {
 
     public void setEmployeeId(String employeeId) {
         this.employeeId = employeeId;
+    }
+
+    public boolean isInChatMode() {
+        return inChatMode;
+    }
+
+    public void setInChatMode(boolean inChatMode) {
+        this.inChatMode = inChatMode;
+    }
+
+    public String getChatPartnerId() {
+        return chatPartnerId;
+    }
+
+    public void setChatPartnerId(String chatPartnerId) {
+        this.chatPartnerId = chatPartnerId;
+    }
+
+    public void setChatCallback(ChatCallback callback) {
+        this.chatCallback = callback;
     }
 }

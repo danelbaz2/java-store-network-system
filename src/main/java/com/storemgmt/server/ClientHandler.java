@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.storemgmt.model.customer.Customer;
@@ -30,6 +31,19 @@ public class ClientHandler implements Runnable {
 
     private String branchId;
     private Employee currentEmployee;
+
+    // Chat state tracking
+    private String chatPartnerId = null; // Who we're chatting with
+
+    // Static map to track managers observing chats: chatKey -> list of observer
+    // employee IDs
+    // chatKey is formed as "empId1:empId2" (alphabetically sorted)
+    private static final Map<String, List<String>> chatObservers = new HashMap<>();
+
+    private static String getChatKey(String emp1, String emp2) {
+        // I checked here < 0 to see because we want alphabetic order
+        return emp1.compareTo(emp2) < 0 ? emp1 + ":" + emp2 : emp2 + ":" + emp1;
+    }
 
     public ClientHandler(Socket socket, Chain chain, StoreServer server) {
         this.socket = socket;
@@ -106,6 +120,26 @@ public class ClientHandler implements Runnable {
                 return handleShowReport("category");
             case "SHOW_REPORT_BY_PRODUCT":
                 return handleShowReport("product");
+            case "GET_OTHER_BRANCH_EMPLOYEES":
+                return handleGetOtherBranchEmployees();
+            case "CHECK_CHAT_AVAILABILITY":
+                return handleCheckChatAvailability(data);
+            case "START_CHAT":
+                return handleStartChat(data);
+            case "ACCEPT_CHAT":
+                return handleAcceptChat(data);
+            case "END_CHAT":
+                return handleEndChat(data);
+            case "SEND_CHAT_MESSAGE":
+                return handleSendChatMessage(data);
+            case "GET_ACTIVE_CHATS":
+                return handleGetActiveChats();
+            case "JOIN_CHAT":
+                return handleJoinChat(data);
+            case "LEAVE_CHAT":
+                return handleLeaveChat(data);
+            case "ADMIN_CHAT_MESSAGE":
+                return handleAdminChatMessage(data);
             default:
                 return "ERROR|Unknown action: " + action;
         }
@@ -413,7 +447,516 @@ public class ClientHandler implements Runnable {
         server.removeClient(this);
     }
 
+    private String handleGetOtherBranchEmployees() {
+        if (currentEmployee == null) {
+            return "ERROR|Must be logged in";
+        }
+
+        StringBuilder list = new StringBuilder();
+        int count = 0;
+
+        for (ClientHandler client : server.getConnectedClients()) {
+            if (client == this)
+                continue;
+
+            // Skip if not logged in
+            if (client.getCurrentEmployee() == null)
+                continue;
+
+            // Only include employees from OTHER branches
+            if (!client.getBranchId().equals(this.branchId)) {
+                Employee emp = client.getCurrentEmployee();
+                list.append(emp.getEmployeeId())
+                        .append(" - ")
+                        .append(emp.getFullName())
+                        .append(" (Branch: ")
+                        .append(client.getBranchId())
+                        .append(")\\n");
+                count++;
+            }
+        }
+
+        if (count == 0) {
+            return "OK|No employees from other branches are connected|employees:";
+        }
+
+        return "OK|Found " + count + " employee(s) from other branches|employees:" + list.toString();
+    }
+
+    private String handleCheckChatAvailability(HashMap<String, String> data) {
+        if (currentEmployee == null) {
+            return "ERROR|Must be logged in";
+        }
+
+        String targetEmpId = data.get("targetEmployeeId");
+        if (targetEmpId == null || targetEmpId.isEmpty()) {
+            return "ERROR|Missing target employee ID";
+        }
+
+        // Find the target client handler
+        ClientHandler targetClient = null;
+        for (ClientHandler client : server.getConnectedClients()) {
+            if (client == this)
+                continue;
+
+            if (client.getCurrentEmployee() != null &&
+                    client.getCurrentEmployee().getEmployeeId().equals(targetEmpId)) {
+                targetClient = client;
+                break;
+            }
+        }
+
+        if (targetClient == null) {
+            return "ERROR|Employee " + targetEmpId + " is not connected or not logged in";
+        }
+
+        // Check if from same branch (should be different branch for this feature)
+        if (targetClient.getBranchId().equals(this.branchId)) {
+            return "ERROR|Cannot start chat with employees from the same branch";
+        }
+
+        // Check if the target employee is busy selling
+        synchronized (chain) {
+            StoreBranch targetBranch = chain.getBranchById(targetClient.getBranchId());
+            if (targetBranch != null && targetBranch.isCashierBusy(targetEmpId)) {
+                return "ERROR|Employee " + targetEmpId + " is currently busy with a customer. Please try again later.";
+            }
+        }
+
+        return "OK|Employee " + targetEmpId + " is available for chat";
+    }
+
+    private String handleStartChat(HashMap<String, String> data) {
+        if (currentEmployee == null) {
+            return "ERROR|Must be logged in";
+        }
+
+        String targetEmpId = data.get("targetEmployeeId");
+        if (targetEmpId == null || targetEmpId.isEmpty()) {
+            return "ERROR|Missing target employee ID";
+        }
+
+        // Find the target client handler
+        ClientHandler targetClient = null;
+        for (ClientHandler client : server.getConnectedClients()) {
+            if (client == this)
+                continue;
+
+            if (client.getCurrentEmployee() != null &&
+                    client.getCurrentEmployee().getEmployeeId().equals(targetEmpId)) {
+                targetClient = client;
+                break;
+            }
+        }
+
+        if (targetClient == null) {
+            // Not connected - subscribe for notification when they become available
+            ChatAvailabilityObserver.subscribe(currentEmployee.getEmployeeId(), targetEmpId);
+            return "PENDING|Employee " + targetEmpId
+                    + " is not connected. You will be notified when they are available.";
+        }
+
+        // Check if from same branch
+        if (targetClient.getBranchId().equals(this.branchId)) {
+            return "ERROR|Cannot start chat with employees from the same branch";
+        }
+
+        // Check if the target employee is busy selling
+        synchronized (chain) {
+            StoreBranch targetBranch = chain.getBranchById(targetClient.getBranchId());
+            if (targetBranch != null && targetBranch.isCashierBusy(targetEmpId)) {
+                // Subscribe for notification when they become available
+                ChatAvailabilityObserver.subscribe(currentEmployee.getEmployeeId(), targetEmpId);
+                return "PENDING|Employee " + targetEmpId
+                        + " is currently busy with a customer. You will be notified when they are available.";
+            }
+        }
+
+        // Check if the target employee is already in a chat
+        if (targetClient.getChatPartnerId() != null) {
+            // Subscribe for notification when they become available
+            ChatAvailabilityObserver.subscribe(currentEmployee.getEmployeeId(), targetEmpId);
+            return "PENDING|Employee " + targetEmpId
+                    + " is currently in another chat. You will be notified when they are available.";
+        }
+
+        // Set chat partner tracking for both sides
+        this.chatPartnerId = targetEmpId;
+        targetClient.setChatPartnerId(currentEmployee.getEmployeeId());
+
+        // Send chat request to target client
+        targetClient.sendChatRequest(currentEmployee.getEmployeeId(), currentEmployee.getFullName());
+
+        Logger.write("Chat started: " + currentEmployee.getEmployeeId() + " -> " + targetEmpId);
+
+        return "OK|Chat session started with " + targetEmpId;
+    }
+
+    private String handleAcceptChat(HashMap<String, String> data) {
+        if (currentEmployee == null) {
+            return "ERROR|Must be logged in";
+        }
+        // Just acknowledge - the chat is already established
+        return "OK|Chat accepted";
+    }
+
+    /**
+     * Notify all employees who were waiting to chat with this employee.
+     * Called when this employee becomes available (after ending a chat or finishing
+     * a sale).
+     */
+    private void notifyWaitingEmployees() {
+        if (currentEmployee == null) {
+            return;
+        }
+
+        String myEmpId = currentEmployee.getEmployeeId();
+        List<String> waitingEmployees = ChatAvailabilityObserver.getAndClearWaitingRequesters(myEmpId);
+
+        for (String requesterEmpId : waitingEmployees) {
+            // Find the requester's client handler and notify them
+            for (ClientHandler client : server.getConnectedClients()) {
+                if (client.getCurrentEmployee() != null &&
+                        client.getCurrentEmployee().getEmployeeId().equals(requesterEmpId)) {
+                    client.sendAvailabilityNotification(myEmpId);
+                    break;
+                }
+            }
+        }
+    }
+
+    private String handleEndChat(HashMap<String, String> data) {
+        if (currentEmployee == null) {
+            return "ERROR|Must be logged in";
+        }
+
+        String targetEmpId = data.get("targetEmployeeId");
+        if (targetEmpId == null || targetEmpId.isEmpty()) {
+            return "ERROR|Missing target employee ID";
+        }
+
+        // Clear chat partner for both sides
+        this.chatPartnerId = null;
+
+        // Find the target client handler
+        for (ClientHandler client : server.getConnectedClients()) {
+            if (client.getCurrentEmployee() != null &&
+                    client.getCurrentEmployee().getEmployeeId().equals(targetEmpId)) {
+                client.setChatPartnerId(null);
+                client.sendChatEnd(currentEmployee.getEmployeeId());
+                break;
+            }
+        }
+
+        // Notify any observing managers that the chat has ended
+        String chatKey = getChatKey(currentEmployee.getEmployeeId(), targetEmpId);
+        List<String> observers;
+        synchronized (chatObservers) {
+            observers = chatObservers.remove(chatKey);
+        }
+        if (observers != null) {
+            for (String observerId : observers) {
+                for (ClientHandler client : server.getConnectedClients()) {
+                    if (client.getCurrentEmployee() != null &&
+                            client.getCurrentEmployee().getEmployeeId().equals(observerId)) {
+                        client.sendChatEnd(currentEmployee.getEmployeeId());
+                        break;
+                    }
+                }
+            }
+        }
+
+        Logger.write("Chat ended by: " + currentEmployee.getEmployeeId());
+
+        // Notify anyone waiting to chat with either party that they're now available
+        notifyWaitingEmployees();
+
+        return "OK|Chat ended";
+    }
+
+    private String handleSendChatMessage(HashMap<String, String> data) {
+        if (currentEmployee == null) {
+            return "ERROR|Must be logged in";
+        }
+
+        String targetEmpId = data.get("targetEmployeeId");
+        String message = data.get("message");
+
+        if (targetEmpId == null || message == null) {
+            return "ERROR|Missing target employee ID or message";
+        }
+
+        // Find the target client handler
+        ClientHandler targetClient = null;
+        for (ClientHandler client : server.getConnectedClients()) {
+            if (client.getCurrentEmployee() != null &&
+                    client.getCurrentEmployee().getEmployeeId().equals(targetEmpId)) {
+                targetClient = client;
+                break;
+            }
+        }
+
+        if (targetClient == null) {
+            return "ERROR|Employee " + targetEmpId + " is no longer connected";
+        }
+
+        // Send the message to the target client
+        targetClient.sendChatMessage(currentEmployee.getEmployeeId(), message);
+
+        // Also send to any observing managers
+        String chatKey = getChatKey(currentEmployee.getEmployeeId(), targetEmpId);
+        List<String> observers = chatObservers.get(chatKey);
+        if (observers != null) {
+            for (String observerId : observers) {
+                for (ClientHandler client : server.getConnectedClients()) {
+                    if (client.getCurrentEmployee() != null &&
+                            client.getCurrentEmployee().getEmployeeId().equals(observerId)) {
+                        client.sendChatMessage(currentEmployee.getEmployeeId(), message);
+                        break;
+                    }
+                }
+            }
+        }
+
+        Logger.write("Chat: " + currentEmployee.getEmployeeId() + " -> " + targetEmpId + ": " + message);
+
+        return "OK|Message sent";
+    }
+
+    // Method to send a chat request to this client
+    public void sendChatRequest(String fromEmployeeId, String fromName) {
+        if (out != null) {
+            out.println("CHAT_REQUEST|" + fromEmployeeId + "|" + fromName);
+            out.flush();
+        }
+    }
+
+    // Method to send a chat message to this client
+    public void sendChatMessage(String fromEmployeeId, String message) {
+        if (out != null) {
+            out.println("CHAT_MESSAGE|" + fromEmployeeId + "|" + message);
+            out.flush();
+        }
+    }
+
+    // Method to notify this client that chat has ended
+    public void sendChatEnd(String byEmployeeId) {
+        if (out != null) {
+            out.println("CHAT_END|" + byEmployeeId);
+            out.flush();
+        }
+    }
+
+    // Method to notify this client that a target employee is now available
+    public void sendAvailabilityNotification(String availableEmployeeId) {
+        if (out != null) {
+            out.println("CHAT_AVAILABLE|" + availableEmployeeId);
+            out.flush();
+        }
+    }
+
     public String getBranchId() {
         return branchId;
+    }
+
+    public Employee getCurrentEmployee() {
+        return currentEmployee;
+    }
+
+    public String getChatPartnerId() {
+        return chatPartnerId;
+    }
+
+    public void setChatPartnerId(String partnerId) {
+        this.chatPartnerId = partnerId;
+    }
+
+    // ============ Admin Chat Monitoring Methods ============
+
+    private String handleGetActiveChats() {
+        if (currentEmployee == null) {
+            return "ERROR|Must be logged in";
+        }
+
+        // Check if manager
+        if (currentEmployee.getRole() != Role.MANAGER) {
+            return "ERROR|Only managers can monitor chats";
+        }
+
+        StringBuilder list = new StringBuilder();
+        int count = 0;
+        java.util.Set<String> seenChatPairs = new java.util.HashSet<>();
+
+        for (ClientHandler client : server.getConnectedClients()) {
+            if (client == this)
+                continue;
+
+            // Only include clients that are in an active chat
+            if (client.getCurrentEmployee() != null && client.getChatPartnerId() != null) {
+                Employee emp = client.getCurrentEmployee();
+                String empId = emp.getEmployeeId();
+                String partnerId = client.getChatPartnerId();
+
+                // Create a normalized pair key to avoid duplicates (sort IDs alphabetically)
+                String pairKey = empId.compareTo(partnerId) < 0
+                        ? empId + "|" + partnerId
+                        : partnerId + "|" + empId;
+
+                // Skip if we've already added this chat pair
+                if (seenChatPairs.contains(pairKey)) {
+                    continue;
+                }
+                seenChatPairs.add(pairKey);
+
+                list.append(empId)
+                        .append(" - ")
+                        .append(emp.getFullName())
+                        .append(" <-> ")
+                        .append(partnerId)
+                        .append("\\n");
+                count++;
+            }
+        }
+
+        if (count == 0) {
+            return "OK|No active chat sessions|chats:";
+        }
+
+        return "OK|Found " + count + " active chat session(s)|chats:" + list.toString();
+    }
+
+    private String handleJoinChat(HashMap<String, String> data) {
+        if (currentEmployee == null) {
+            return "ERROR|Must be logged in";
+        }
+
+        // Check if manager
+        if (currentEmployee.getRole() != Role.MANAGER) {
+            return "ERROR|Only managers can join chats";
+        }
+
+        String targetEmpId = data.get("targetEmployeeId");
+        if (targetEmpId == null || targetEmpId.isEmpty()) {
+            return "ERROR|Missing target employee ID";
+        }
+
+        // Find the target client and their chat partner
+        ClientHandler targetClient = null;
+        for (ClientHandler client : server.getConnectedClients()) {
+            if (client.getCurrentEmployee() != null &&
+                    client.getCurrentEmployee().getEmployeeId().equals(targetEmpId)) {
+                targetClient = client;
+                break;
+            }
+        }
+
+        if (targetClient == null) {
+            return "ERROR|Employee " + targetEmpId + " is not connected";
+        }
+
+        String partnerId = targetClient.getChatPartnerId();
+        if (partnerId == null) {
+            return "ERROR|Employee " + targetEmpId + " is not in an active chat";
+        }
+
+        // Notify both participants that a manager joined
+        String managerName = currentEmployee.getFullName();
+        String managerId = currentEmployee.getEmployeeId();
+        targetClient.sendChatMessage("SYSTEM",
+                "Manager '" + managerName + "'' (" + managerId + ") has joined the chat");
+
+        for (ClientHandler client : server.getConnectedClients()) {
+            if (client.getCurrentEmployee() != null &&
+                    client.getCurrentEmployee().getEmployeeId().equals(partnerId)) {
+                client.sendChatMessage("SYSTEM",
+                        "Manager '" + managerName + "'' (" + managerId + ") has joined the chat");
+                break;
+            }
+        }
+
+        // Add this manager to the chat observers
+        String chatKey = getChatKey(targetEmpId, partnerId);
+        synchronized (chatObservers) {
+            chatObservers.computeIfAbsent(chatKey, k -> new java.util.ArrayList<>()).add(managerId);
+        }
+
+        Logger.write("Manager " + managerId + " joined chat between " + targetEmpId + " and " + partnerId);
+
+        return "OK|Joined chat session|chatPartnerId:" + partnerId;
+    }
+
+    private String handleLeaveChat(HashMap<String, String> data) {
+        if (currentEmployee == null) {
+            return "ERROR|Must be logged in";
+        }
+
+        String targetEmpId = data.get("targetEmployeeId");
+        String chatPartner = data.get("chatPartnerId");
+        String managerId = currentEmployee.getEmployeeId();
+        String managerName = currentEmployee.getFullName();
+
+        // Remove this manager from chat observers
+        if (targetEmpId != null && chatPartner != null) {
+            String chatKey = getChatKey(targetEmpId, chatPartner);
+            synchronized (chatObservers) {
+                List<String> observers = chatObservers.get(chatKey);
+                if (observers != null) {
+                    observers.remove(managerId);
+                    if (observers.isEmpty()) {
+                        chatObservers.remove(chatKey);
+                    }
+                }
+            }
+
+            // Notify both participants that the manager has left
+            for (ClientHandler client : server.getConnectedClients()) {
+                if (client.getCurrentEmployee() != null) {
+                    String empId = client.getCurrentEmployee().getEmployeeId();
+                    if (empId.equals(targetEmpId) || empId.equals(chatPartner)) {
+                        client.sendChatMessage("SYSTEM",
+                                "Manager '" + managerName + "'' (" + managerId + ") has left the chat");
+                    }
+                }
+            }
+        }
+
+        Logger.write("Manager " + managerId + " left chat monitoring");
+
+        return "OK|Left chat session";
+    }
+
+    private String handleAdminChatMessage(HashMap<String, String> data) {
+        if (currentEmployee == null) {
+            return "ERROR|Must be logged in";
+        }
+
+        // Check if manager
+        if (currentEmployee.getRole() != Role.MANAGER) {
+            return "ERROR|Only managers can use this command";
+        }
+
+        String targetEmpId = data.get("targetEmployeeId");
+        String chatPartnerId = data.get("chatPartnerId");
+        String message = data.get("message");
+
+        if (targetEmpId == null || chatPartnerId == null || message == null) {
+            return "ERROR|Missing required parameters";
+        }
+
+        String adminId = currentEmployee.getEmployeeId();
+
+        // Send message to both participants
+        for (ClientHandler client : server.getConnectedClients()) {
+            if (client.getCurrentEmployee() != null) {
+                String empId = client.getCurrentEmployee().getEmployeeId();
+                if (empId.equals(targetEmpId) || empId.equals(chatPartnerId)) {
+                    client.sendChatMessage(adminId + " (Manager)", message);
+                }
+            }
+        }
+
+        Logger.write("Admin chat: " + adminId + " -> [" + targetEmpId + ", " + chatPartnerId + "]: " + message);
+
+        return "OK|Message sent to both participants";
     }
 }
