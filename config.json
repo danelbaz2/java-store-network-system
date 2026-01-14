@@ -8,6 +8,48 @@
     "ReturningCustomer": 0.8,
     "VIPCustomer": 0.5
   },
+  "productCatalog": {
+    "P001": {
+      "type": "Jean",
+      "brand": "ADIDAS",
+      "price": 199.99
+    },
+    "P002": {
+      "type": "Shorts",
+      "brand": "NIKE",
+      "price": 79.99
+    },
+    "P003": {
+      "type": "LongShirt",
+      "brand": "POLO",
+      "price": 129.99
+    },
+    "P004": {
+      "type": "TShirt",
+      "brand": "NIKE",
+      "price": 49.99
+    },
+    "P005": {
+      "type": "Bra",
+      "brand": "NIKE",
+      "price": 149.99
+    },
+    "P006": {
+      "type": "Boxer",
+      "brand": "ADIDAS",
+      "price": 34.99
+    },
+    "P007": {
+      "type": "RunningShoe",
+      "brand": "NIKE",
+      "price": 499.99
+    },
+    "P008": {
+      "type": "Sneaker",
+      "brand": "ADIDAS",
+      "price": 329.99
+    }
+  },
   "employees": {
     "E001": {
       "fullName": "Admin User",
@@ -52,58 +94,64 @@
       "password": "Aa123456!"
     }
   },
-  "products": {
-    "P001": {
-      "type": "Jean",
-      "brand": "ADIDAS",
-      "price": 199.99,
-      "stock": 50
-    },
-    "P002": {
-      "type": "Shorts",
-      "brand": "NIKE",
-      "price": 79.99,
-      "stock": 50
-    },
-    "P003": {
-      "type": "LongShirt",
-      "brand": "POLO",
-      "price": 129.99,
-      "stock": 50
-    },
-    "P004": {
-      "type": "TShirt",
-      "brand": "NIKE",
-      "price": 49.99,
-      "stock": 50
-    },
-    "P005": {
-      "type": "Bra",
-      "brand": "NIKE",
-      "price": 149.99,
-      "stock": 50
-    },
-    "P006": {
-      "type": "Boxer",
-      "brand": "ADIDAS",
-      "price": 34.99,
-      "stock": 50
-    },
-    "P007": {
-      "type": "RunningShoe",
-      "brand": "NIKE",
-      "price": 499.99,
-      "stock": 50
-    },
-    "P008": {
-      "type": "Sneaker",
-      "brand": "ADIDAS",
-      "price": 329.99,
-      "stock": 50
-    }
-  },
   "branches": {
-    "BR01": "Tel Aviv",
-    "BR02": "Jerusalem"
+    "BR01": {
+      "branchName": "Tel Aviv",
+      "inventory": {
+        "P001": {
+          "stock": 4
+        },
+        "P002": {
+          "stock": 2
+        },
+        "P003": {
+          "stock": 2
+        },
+        "P004": {
+          "stock": 0
+        },
+        "P005": {
+          "stock": 2
+        },
+        "P006": {
+          "stock": 3
+        },
+        "P007": {
+          "stock": 15
+        },
+        "P008": {
+          "stock": 50
+        }
+      }
+    },
+    "BR02": {
+      "branchName": "Jerusalem",
+      "inventory": {
+        "P001": {
+          "stock": 0
+        },
+        "P002": {
+          "stock": 4
+        },
+        "P003": {
+          "stock": 3
+        },
+        "P004": {
+          "stock": 1
+        },
+        "P005": {
+          "stock": 1
+        },
+        "P006": {
+          "stock": 0
+        },
+        "P007": {
+          "stock": 1
+        },
+        "P008": {
+          "stock": 0
+        }
+      }
+    }
   }
 }

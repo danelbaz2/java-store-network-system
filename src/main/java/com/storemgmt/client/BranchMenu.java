@@ -246,7 +246,7 @@ public class BranchMenu implements BranchClient.ChatCallback {
     }
 
     private String readProductId() throws IOException {
-        Set<String> existingIds = JsonLoader.getKeys("products");
+        Set<String> existingIds = JsonLoader.getKeys("productCatalog");
         while (true) {
             System.out.print("Product ID (must start with 'P'): ");
             String input = console.readLine().toUpperCase();

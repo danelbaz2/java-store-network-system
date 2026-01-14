@@ -51,7 +51,7 @@ public class ServerApp {
 
         // Iterate over each branch key and create branches dynamically
         for (String branchId : branchKeys) {
-            String branchName = JsonLoader.getString("branches." + branchId);
+            String branchName = JsonLoader.getString("branches." + branchId + ".branchName");
             System.out.println("  Creating branch: " + branchId + " - " + branchName);
             StoreBranch branch = new StoreBranch(branchId, branchName);
             chain.addBranch(branch);

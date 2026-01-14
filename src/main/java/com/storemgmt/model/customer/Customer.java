@@ -1,7 +1,10 @@
 package com.storemgmt.model.customer;
 
 import java.util.HashMap;
+import java.util.Vector;
+
 import com.storemgmt.model.product.Product;
+import com.storemgmt.utils.JsonLoader;
 
 public abstract class Customer {
     private String fullName;
@@ -19,11 +22,14 @@ public abstract class Customer {
     }
 
     private void generateShoppingList() {
-        int range = (int) (Math.random() * 10) + 1;
+        Vector<String> productIds = new Vector<>(JsonLoader.getKeys("productCatalog"));
+        int range = (int) (Math.random() * productIds.size()) + 1;
 
         for (int i = 0; i < range; i++) {
-            int amount = (int) (Math.random() * 10) + 1;
-            this.shoppingList.put(Product.getRandomProduct(), amount);
+            int amount = (int) (Math.random() * 5) + 1;
+            String productId = productIds.get((int) (Math.random() * productIds.size()));
+            this.shoppingList.put(Product.getRandomProduct(productId), amount);
+            productIds.removeElement(productId);
         }
     }
 

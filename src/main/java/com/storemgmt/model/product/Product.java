@@ -1,8 +1,6 @@
 package com.storemgmt.model.product;
 
 import java.util.Objects;
-import java.util.Set;
-
 import com.storemgmt.utils.JsonLoader;
 
 public abstract class Product {
@@ -39,20 +37,12 @@ public abstract class Product {
         this.price = price;
     }
 
-    private static int productCounter = 1000;
+    public static Product getRandomProduct(String productId) {
 
-    public static Product getRandomProduct() {
-        // Pick a random product from config.json
-        Set<String> productIds = JsonLoader.getKeys("products");
-        String[] ids = productIds.toArray(new String[0]);
-        String randomId = ids[(int) (Math.random() * ids.length)];
-
-        String type = JsonLoader.getString("products." + randomId + ".type");
-        String brand = JsonLoader.getString("products." + randomId + ".brand");
-        double price = JsonLoader.getDouble("products." + randomId + ".price");
-
+        String brand = JsonLoader.getString("productCatalog." + productId + ".brand");
+        double price = JsonLoader.getDouble("productCatalog." + productId + ".price");
+        String type = JsonLoader.getString("productCatalog." + productId + ".type");
         BrandType brandType = BrandType.valueOf(brand);
-        String productId = "P" + (productCounter++);
 
         switch (type) {
             case "Jean":
@@ -76,17 +66,17 @@ public abstract class Product {
         }
     }
 
-    private static double getPriceByType(String productType) {
+    // private static double getPriceByType(String productType) {
 
-        for (String productId : JsonLoader.getKeys("products")) {
-            String type = JsonLoader.getString("products." + productId + ".type");
-            if (type.equals(productType)) {
-                return JsonLoader.getDouble("products." + productId + ".price");
-            }
-        }
+    // for (String productId : JsonLoader.getKeys("productCatalog")) {
+    // String type = JsonLoader.getString("productCatalog." + productId + ".type");
+    // if (type.equals(productType)) {
+    // return JsonLoader.getDouble("productCatalog." + productId + ".price");
+    // }
+    // }
 
-        return 0;
-    }
+    // return 0;
+    // }
 
     @Override
     public boolean equals(Object o) {

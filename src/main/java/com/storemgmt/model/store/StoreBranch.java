@@ -84,25 +84,33 @@ public class StoreBranch {
     }
 
     private void initializeInventory() {
-        for (String productId : JsonLoader.getKeys("products")) {
-            // 70% chance this branch carries this product
-            if (Math.random() > 0.7) {
-                continue;
+        // Get the inventory for this specific branch
+        String inventoryPath = "branches." + branchId + ".inventory";
+
+        try {
+            // Iterate through products in this branch's inventory
+            for (String productId : JsonLoader.getKeys(inventoryPath)) {
+                // Get stock from branch inventory
+                int stock = JsonLoader.getInt(inventoryPath + "." + productId + ".stock");
+
+                // Get product details from central catalog
+                String catalogPath = "productCatalog." + productId;
+                String type = JsonLoader.getString(catalogPath + ".type");
+                String brand = JsonLoader.getString(catalogPath + ".brand");
+                double price = JsonLoader.getDouble(catalogPath + ".price");
+
+                BrandType brandType = BrandType.valueOf(brand);
+                Product product = createProduct(productId, type, brandType, price);
+
+                if (product != null) {
+                    this.products.put(product, stock);
+                }
             }
-
-            String type = JsonLoader.getString("products." + productId + ".type");
-            String brand = JsonLoader.getString("products." + productId + ".brand");
-            double price = JsonLoader.getDouble("products." + productId + ".price");
-            int stock = JsonLoader.getInt("products." + productId + ".stock");
-
-            BrandType brandType = BrandType.valueOf(brand);
-            Product product = createProduct(productId, type, brandType, price);
-
-            if (product != null) {
-                this.products.put(product, stock);
-            }
+            System.out.println("  Loaded " + products.size() + " products for branch " + branchId);
+        } catch (Exception e) {
+            System.err.println("Error loading inventory for branch " + branchId + ": " + e.getMessage());
+            e.printStackTrace();
         }
-        System.out.println("  Loaded " + products.size() + " products for branch " + branchId);
     }
 
     private Product createProduct(String productId, String type, BrandType brand, double price) {
@@ -302,6 +310,10 @@ public class StoreBranch {
                 sellRecord.put(product.getKey(), 0);
             }
 
+            // remove from stock
+            JsonLoader.set("branches." + branchId + ".inventory." + product.getKey().getProductId() + ".stock",
+                    currentAmount - amountToBuy);
+
             int soldProduct = sellRecord.get(product.getKey()).intValue();
             sellRecord.put(product.getKey(), soldProduct + amountToBuy);
 
@@ -309,6 +321,9 @@ public class StoreBranch {
 
             sum += product.getKey().getPrice() * amountToBuy;
         }
+
+        // Save stock changes to JSON
+        JsonLoader.save();
 
         double finalPrice = sum * customer.getDiscount();
 

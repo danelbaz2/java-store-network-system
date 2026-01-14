@@ -102,8 +102,7 @@ public class ClientHandler implements Runnable {
             case "GET_INVENTORY":
                 return handleGetInventory();
             case "SELL":
-            case "SELL_PRODUCT":
-                return handleSellProduct();
+                return handleSell();
             case "GET_EMPLOYEES":
                 return handleGetEmployees();
             case "SEND_MESSAGE":
@@ -161,7 +160,7 @@ public class ClientHandler implements Runnable {
             }
 
             branch.getProducts().put(product, Integer.parseInt(quantity));
-            JsonLoader.set("products." + productId + ".stock", Integer.parseInt(quantity));
+            JsonLoader.set("branches." + branchId + ".inventory." + productId + ".stock", Integer.parseInt(quantity));
             JsonLoader.save();
             return "OK|Inventory updated successfully";
         }
@@ -347,7 +346,7 @@ public class ClientHandler implements Runnable {
             for (Map.Entry<Product, Integer> entry : branch.getProducts().entrySet()) {
                 Product p = entry.getKey();
                 int qty = entry.getValue();
-                if (qty > 0) {
+                {
                     inventory.append(p.getProductId())
                             .append(" - ").append(p.getBrand())
                             .append(" ")
@@ -363,7 +362,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private String handleSellProduct() {
+    private String handleSell() {
         if (currentEmployee == null) {
             return "ERROR|Must be logged in to sell";
         }
