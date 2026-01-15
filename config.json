@@ -1,0 +1,157 @@
+{
+  "server": {
+    "port": 5000,
+    "host": "localhost"
+  },
+  "customers": {
+    "NewCustomer": 1,
+    "ReturningCustomer": 0.8,
+    "VIPCustomer": 0.5
+  },
+  "productCatalog": {
+    "P001": {
+      "type": "Jean",
+      "brand": "ADIDAS",
+      "price": 199.99
+    },
+    "P002": {
+      "type": "Shorts",
+      "brand": "NIKE",
+      "price": 79.99
+    },
+    "P003": {
+      "type": "LongShirt",
+      "brand": "POLO",
+      "price": 129.99
+    },
+    "P004": {
+      "type": "TShirt",
+      "brand": "NIKE",
+      "price": 49.99
+    },
+    "P005": {
+      "type": "Bra",
+      "brand": "NIKE",
+      "price": 149.99
+    },
+    "P006": {
+      "type": "Boxer",
+      "brand": "ADIDAS",
+      "price": 34.99
+    },
+    "P007": {
+      "type": "RunningShoe",
+      "brand": "NIKE",
+      "price": 499.99
+    },
+    "P008": {
+      "type": "Sneaker",
+      "brand": "ADIDAS",
+      "price": 329.99
+    }
+  },
+  "employees": {
+    "E001": {
+      "fullName": "Admin User",
+      "phone": "050-1111111",
+      "branchId": "BR01",
+      "role": "ADMIN",
+      "password": "Aa123456!"
+    },
+    "E004": {
+      "fullName": "Manager User",
+      "phone": "050-4444444",
+      "branchId": "BR02",
+      "role": "Manager",
+      "password": "Manager123!"
+    },
+    "E005": {
+      "fullName": "Shahaf Elbaz",
+      "phone": "0507777373",
+      "branchId": "BR02",
+      "role": "ADMIN",
+      "password": "Aa123456!"
+    },
+    "E008": {
+      "fullName": "bla bla",
+      "phone": "0526757919",
+      "branchId": "BR01",
+      "role": "CASHIER",
+      "password": "zxcvBnmgd1"
+    },
+    "E006": {
+      "fullName": "2345678",
+      "phone": "0123456789",
+      "branchId": "BR01",
+      "role": "CASHIER",
+      "password": "Aa123456!"
+    },
+    "E002": {
+      "fullName": "Danilov",
+      "phone": "0500000000",
+      "branchId": "BR01",
+      "role": "ADMIN",
+      "password": "Aa123456!"
+    }
+  },
+  "branches": {
+    "BR01": {
+      "branchName": "Tel Aviv",
+      "inventory": {
+        "P001": {
+          "stock": 0
+        },
+        "P002": {
+          "stock": 0
+        },
+        "P003": {
+          "stock": 0
+        },
+        "P004": {
+          "stock": 0
+        },
+        "P005": {
+          "stock": 0
+        },
+        "P006": {
+          "stock": 0
+        },
+        "P007": {
+          "stock": 0
+        },
+        "P008": {
+          "stock": 34
+        }
+      }
+    },
+    "BR02": {
+      "branchName": "Jerusalem",
+      "inventory": {
+        "P001": {
+          "stock": 0
+        },
+        "P002": {
+          "stock": 4
+        },
+        "P003": {
+          "stock": 3
+        },
+        "P004": {
+          "stock": 1
+        },
+        "P005": {
+          "stock": 1
+        },
+        "P006": {
+          "stock": 0
+        },
+        "P007": {
+          "stock": 1
+        },
+        "P008": {
+          "stock": 0
+        }
+      }
+    }
+  }
+}
