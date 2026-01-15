@@ -29,7 +29,7 @@ public class StoreBranch {
     private static final int MAX_CASHIERS = 3;
     private ExecutorService cashierPool;
     private Map<String, Boolean> cashierBusyStatus;
-    private Map<String, Double> cashierSales; // Track revenue per cashier
+    private Map<String, Double> cashierSales;
 
     public StoreBranch(String branchId, String name) {
         this.branchId = branchId;
@@ -38,25 +38,19 @@ public class StoreBranch {
         employees = new LinkedList<Employee>();
         sellRecord = new HashMap<Product, Integer>();
         customerQueue = new LinkedList<Customer>();
-
         cashierPool = Executors.newFixedThreadPool(MAX_CASHIERS);
         cashierBusyStatus = new HashMap<String, Boolean>();
         cashierSales = new HashMap<String, Double>();
-
         initializeInventory();
         generateCustomers(10);
     }
 
-    // Generate random customers and add to queue
     private void generateCustomers(int count) {
         String[] names = { "John", "Sarah", "Mike", "Emma", "David", "Lisa", "Tom", "Anna", "James", "Maria" };
-
         for (int i = 0; i < count; i++) {
             String name = names[(int) (Math.random() * names.length)];
             String id = "C" + (1000 + i);
             String phone = "050" + (1000000 + i);
-
-            // Randomly pick a customer type
             int type = (int) (Math.random() * 3);
             Customer customer;
             if (type == 0) {
@@ -66,7 +60,6 @@ public class StoreBranch {
             } else {
                 customer = new VIPCustomer(name, id, phone);
             }
-
             customerQueue.add(customer);
         }
         System.out.println("  Generated " + count + " customers for branch " + branchId);
@@ -81,24 +74,16 @@ public class StoreBranch {
     }
 
     private void initializeInventory() {
-        // Get the inventory for this specific branch
         String inventoryPath = "branches." + branchId + ".inventory";
-
         try {
-            // Iterate through products in this branch's inventory
             for (String productId : JsonLoader.getKeys(inventoryPath)) {
-                // Get stock from branch inventory
                 int stock = JsonLoader.getInt(inventoryPath + "." + productId + ".stock");
-
-                // Get product details from central catalog
                 String catalogPath = "productCatalog." + productId;
                 String type = JsonLoader.getString(catalogPath + ".type");
                 String brand = JsonLoader.getString(catalogPath + ".brand");
                 double price = JsonLoader.getDouble(catalogPath + ".price");
-
                 BrandType brandType = BrandType.valueOf(brand);
                 Product product = createProduct(productId, type, brandType, price);
-
                 if (product != null) {
                     this.products.put(product, stock);
                 }
@@ -139,33 +124,25 @@ public class StoreBranch {
             saveReportToJson(new HashMap<>(), writer);
             return "BRANCH REPORT: " + name + "|No sales yet.";
         }
-
         int totalItems = 0;
         double totalRevenue = 0;
-
         for (Product p : sellRecord.keySet()) {
             totalItems += sellRecord.get(p);
         }
-
-        // Sum cashier sales (already includes discounts)
         for (Double sales : cashierSales.values()) {
             totalRevenue += sales;
         }
-
         String result = "BRANCH REPORT: " + name;
         result += "|Total Sold: " + totalItems + " items";
         result += "|Revenue: $" + String.format("%.2f", totalRevenue);
-
         result += "|Cashier Sales:";
         for (String cashierId : cashierSales.keySet()) {
             result += "|" + cashierId + ": $" + String.format("%.2f", cashierSales.get(cashierId));
         }
-
         Map<Object, Object> salesMap = new HashMap<>();
         salesMap.put("totalItems", (double) totalItems);
         salesMap.put("totalRevenue", totalRevenue);
         saveReportToJson(salesMap, writer);
-
         return result;
     }
 
@@ -174,24 +151,19 @@ public class StoreBranch {
             saveReportToJson(new HashMap<>(), writer);
             return "CATEGORY REPORT: " + name + "|No sales yet.";
         }
-
         Map<ProductType, Integer> categories = new HashMap<>();
-
         for (Product p : sellRecord.keySet()) {
             ProductType category = p.getProductType();
             int qty = sellRecord.get(p);
             categories.put(category, categories.getOrDefault(category, 0) + qty);
         }
-
         String result = "CATEGORY REPORT: " + name;
         for (ProductType category : categories.keySet()) {
             result += "|" + category + ": " + categories.get(category) + " sold";
         }
-
         Map<Object, Object> categoriesMap = new HashMap<>();
         categoriesMap.putAll(categories);
         saveReportToJson(categoriesMap, writer);
-
         return result;
     }
 
@@ -200,18 +172,14 @@ public class StoreBranch {
             saveReportToJson(new HashMap<>(), writer);
             return "PRODUCT REPORT: " + name + "|No sales yet.";
         }
-
         String result = "PRODUCT REPORT: " + name;
         Map<Object, Object> productsMap = new HashMap<>();
-
         for (Product p : sellRecord.keySet()) {
             int qty = sellRecord.get(p);
             productsMap.put(p.getClass().getSimpleName(), qty);
             result += "|" + p.getClass().getSimpleName() + " (" + p.getBrand() + "): " + qty + " sold";
         }
-
         saveReportToJson(productsMap, writer);
-
         return result;
     }
 
@@ -219,10 +187,8 @@ public class StoreBranch {
         try {
             writer.append("  {\n");
             writer.append("    \"Branch Name\": \"" + name + "\"");
-
             for (Object key : salesMap.keySet())
                 writer.append(",\n" + "    \"" + key + "\": " + salesMap.get(key));
-
             writer.append("\n  }");
         } catch (IOException e) {
             System.out.println("Error saving report: " + e.getMessage());
@@ -243,18 +209,15 @@ public class StoreBranch {
 
     public Employee getEmployeeById(String empId) {
         for (Employee emp : employees) {
-            if (emp.getEmployeeId().equals(empId)) {
+            if (emp.getEmployeeId().equals(empId))
                 return emp;
-            }
         }
         return null;
     }
 
     public void addEmployee(Employee employee) {
         employees.add(employee);
-        // Parse the JSON string from toString() and add as a proper JSON object
-        JsonLoader.add("employees." + employee.getEmployeeId(),
-                JsonParser.parseString(employee.toString()));
+        JsonLoader.add("employees." + employee.getEmployeeId(), JsonParser.parseString(employee.toString()));
         JsonLoader.save();
     }
 
@@ -270,9 +233,8 @@ public class StoreBranch {
 
     public Product getProductById(String productId) {
         for (Product product : products.keySet()) {
-            if (product.getProductId().equals(productId)) {
+            if (product.getProductId().equals(productId))
                 return product;
-            }
         }
         return null;
     }
@@ -282,59 +244,41 @@ public class StoreBranch {
     }
 
     public synchronized double sell(Customer customer, String cashierId) {
-
         System.out.println("---------------- START SELLING ----------------");
         double sum = 0;
         Map<Product, Integer> shoppingList = customer.getShoppingList();
-
         for (Map.Entry<Product, Integer> product : shoppingList.entrySet()) {
             if (!products.containsKey(product.getKey())) {
                 System.out.println("Product '" + product.getKey().getClass().getSimpleName() + " "
                         + product.getKey().getBrand() + "' does not exist in branch " + this.name);
                 continue;
             }
-
             int currentAmount = products.get(product.getKey()).intValue();
             int amountToBuy = product.getValue();
-
             if (currentAmount < amountToBuy) {
                 System.out.println("Product '" + product.getKey().getClass().getSimpleName()
                         + "' not available in sufficient quantity in branch " + this.name);
                 continue;
             }
-
             if (!sellRecord.containsKey(product.getKey())) {
                 sellRecord.put(product.getKey(), 0);
             }
-
-            // remove from stock
             JsonLoader.set("branches." + branchId + ".inventory." + product.getKey().getProductId() + ".stock",
                     currentAmount - amountToBuy);
-
             int soldProduct = sellRecord.get(product.getKey()).intValue();
             sellRecord.put(product.getKey(), soldProduct + amountToBuy);
-
             products.put(product.getKey(), currentAmount - amountToBuy);
-
             sum += product.getKey().getPrice() * amountToBuy;
         }
-
-        // Save stock changes to JSON
         JsonLoader.save();
-
         double finalPrice = sum * customer.getDiscount();
-
-        // Track cashier sales
         double currentCashierTotal = cashierSales.getOrDefault(cashierId, 0.0);
         cashierSales.put(cashierId, currentCashierTotal + finalPrice);
-
         System.out.println("Customer " + customer.getFullName() + " gets the " + customer.getClass().getSimpleName()
                 + " discount.");
         System.out.println("Original price: $" + String.format("%.2f", sum));
         System.out.println("Final price: $" + String.format("%.2f", finalPrice));
-
         System.out.println("---------------- END SELLING ----------------");
-
         return finalPrice;
     }
 
@@ -346,30 +290,18 @@ public class StoreBranch {
         }
     }
 
-    // ============ Cashier Pool Management ============
-
-    // return true if the cashier is busy, false if he's not in the map
     public boolean isCashierBusy(String employeeId) {
         return cashierBusyStatus.getOrDefault(employeeId, false);
     }
 
-    /**
-     * Set the busy status of a cashier
-     */
     public void setCashierBusy(String employeeId, boolean busy) {
         cashierBusyStatus.put(employeeId, busy);
     }
 
-    /**
-     * Submit a customer checkout task to the cashier pool
-     */
     public void submitCustomerForCheckout(Runnable customerHandler) {
         cashierPool.execute(customerHandler);
     }
 
-    /**
-     * Shutdown the cashier pool gracefully (call when server shuts down)
-     */
     public void shutdown() {
         System.out.println("Sorry, we are closing down for the day. Please come back tomorrow.");
         cashierPool.shutdown();

@@ -1,9 +1,5 @@
 package com.storemgmt.security;
 
-/**
- * Simple password validator for the store management system.
- * Checks that passwords meet basic security requirements.
- */
 public class PasswordValidator {
 
     private static final int MIN_LENGTH = 8;

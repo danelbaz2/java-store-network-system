@@ -4,15 +4,11 @@ import com.storemgmt.model.customer.Customer;
 import com.storemgmt.model.store.StoreBranch;
 import com.storemgmt.utils.Logger;
 
-/**
- * Handles the checkout process for a single customer in a separate thread.
- * Simulates checkout time with a random delay, then processes the actual sale.
- */
 public class CustomerHandler implements Runnable {
 
     private final Customer customer;
     private final StoreBranch branch;
-    private final String cashierId; // The employee serving this customer
+    private final String cashierId;
 
     public CustomerHandler(Customer customer, StoreBranch branch, String cashierId) {
         this.customer = customer;
@@ -25,10 +21,8 @@ public class CustomerHandler implements Runnable {
 
         try {
 
-            // Simulate checkout time (2-5 seconds)
             Thread.sleep(2000 + (int) (Math.random() * 3000));
 
-            // Execute the actual sale (synchronized in StoreBranch)
             double total = branch.sell(customer, cashierId);
 
             Logger.write("Cashier " + cashierId +
@@ -38,7 +32,6 @@ public class CustomerHandler implements Runnable {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
-            // IMPORTANT: Mark the cashier as free when done
             branch.setCashierBusy(cashierId, false);
         }
     }

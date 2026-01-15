@@ -33,16 +33,11 @@ public class ClientHandler implements Runnable {
     private String branchId;
     private Employee currentEmployee;
 
-    // Chat state tracking
-    private String chatPartnerId = null; // Who we're chatting with
+    private String chatPartnerId = null;
 
-    // Static map to track managers observing chats: chatKey -> list of observer
-    // employee IDs
-    // chatKey is formed as "empId1:empId2" (alphabetically sorted)
     private static final Map<String, List<String>> chatObservers = new HashMap<>();
 
     private static String getChatKey(String emp1, String emp2) {
-        // I checked here < 0 to see because we want alphabetic order
         return emp1.compareTo(emp2) < 0 ? emp1 + ":" + emp2 : emp2 + ":" + emp1;
     }
 
@@ -67,12 +62,10 @@ public class ClientHandler implements Runnable {
 
                 System.out.println("Received: " + line);
 
-                // Parse: ACTION|branchId|key1:value1|key2:value2
                 String[] parts = line.split("\\|");
                 String action = parts[0];
                 branchId = parts[1];
 
-                // Get data into map
                 HashMap<String, String> data = new HashMap<>();
                 for (int i = 2; i < parts.length; i++) {
                     String[] kv = parts[i].split(":", 2);
@@ -81,7 +74,6 @@ public class ClientHandler implements Runnable {
                     }
                 }
 
-                // Handle the action
                 String response = handleAction(action, data);
                 out.println(response);
                 out.flush();
@@ -170,7 +162,6 @@ public class ClientHandler implements Runnable {
     private String handleShowReport(String type) {
         try {
             synchronized (chain) {
-                // Create reports directory if it doesn't exist
                 java.nio.file.Path reportsDir = Paths.get(System.getProperty("user.dir"), "reports");
                 java.nio.file.Files.createDirectories(reportsDir);
 
@@ -208,10 +199,8 @@ public class ClientHandler implements Runnable {
 
                     returnString.append(branchReport).append("|");
 
-                    // Also write a nice version to Word
                     wordWriter.write("Branch: " + branch.getName() + "\n");
                     wordWriter.write("----------------------------------------\n");
-                    // Parse the pipe-separated report for Word
                     String[] parts = branchReport.split("\\|");
                     for (String part : parts) {
                         if (!part.startsWith("CATEGORY REPORT:")) {
@@ -247,7 +236,7 @@ public class ClientHandler implements Runnable {
         String branchId = data.get("branchId");
         String role = data.get("role");
         String password = data.get("password");
-        // ?
+
         synchronized (chain) {
             StoreBranch branch = chain.getBranchById(branchId);
             if (branch == null) {
@@ -286,7 +275,6 @@ public class ClientHandler implements Runnable {
         String empId = data.get("employeeId");
         String password = data.get("password");
 
-        // check if the employee is already logged in
         for (ClientHandler client : server.getConnectedClients()) {
             if (client == this)
                 continue;
@@ -355,7 +343,7 @@ public class ClientHandler implements Runnable {
                             .append(" (").append(qty)
                             .append(" units) - $")
                             .append(p.getPrice())
-                            .append("\\n"); // Escaped newline - will be unescaped on client
+                            .append("\\n");
                 }
             }
 
@@ -375,12 +363,10 @@ public class ClientHandler implements Runnable {
 
         String cashierId = currentEmployee.getEmployeeId();
 
-        // Check if this cashier is already serving a customer
         if (branch.isCashierBusy(cashierId)) {
             return "ERROR|You are already serving a customer! Please wait.";
         }
 
-        // Get next customer from queue (synchronized access)
         Customer customer;
         synchronized (branch) {
             customer = branch.getNextCustomer();
@@ -389,7 +375,6 @@ public class ClientHandler implements Runnable {
             }
         }
 
-        // Mark this cashier as busy BEFORE submitting to pool
         branch.setCashierBusy(cashierId, true);
 
         CustomerHandler handler = new CustomerHandler(customer, branch, cashierId);
@@ -463,11 +448,9 @@ public class ClientHandler implements Runnable {
             if (client == this)
                 continue;
 
-            // Skip if not logged in
             if (client.getCurrentEmployee() == null)
                 continue;
 
-            // Only include employees from OTHER branches
             if (!client.getBranchId().equals(this.branchId)) {
                 Employee emp = client.getCurrentEmployee();
                 list.append(emp.getEmployeeId())
@@ -497,7 +480,6 @@ public class ClientHandler implements Runnable {
             return "ERROR|Missing target employee ID";
         }
 
-        // Find the target client handler
         ClientHandler targetClient = null;
         for (ClientHandler client : server.getConnectedClients()) {
             if (client == this)
@@ -514,12 +496,10 @@ public class ClientHandler implements Runnable {
             return "ERROR|Employee " + targetEmpId + " is not connected or not logged in";
         }
 
-        // Check if from same branch (should be different branch for this feature)
         if (targetClient.getBranchId().equals(this.branchId)) {
             return "ERROR|Cannot start chat with employees from the same branch";
         }
 
-        // Check if the target employee is busy selling
         synchronized (chain) {
             StoreBranch targetBranch = chain.getBranchById(targetClient.getBranchId());
             if (targetBranch != null && targetBranch.isCashierBusy(targetEmpId)) {
@@ -540,7 +520,6 @@ public class ClientHandler implements Runnable {
             return "ERROR|Missing target employee ID";
         }
 
-        // Find the target client handler
         ClientHandler targetClient = null;
         for (ClientHandler client : server.getConnectedClients()) {
             if (client == this)
@@ -554,41 +533,33 @@ public class ClientHandler implements Runnable {
         }
 
         if (targetClient == null) {
-            // Not connected - subscribe for notification when they become available
             ChatAvailabilityObserver.subscribe(currentEmployee.getEmployeeId(), targetEmpId);
             return "PENDING|Employee " + targetEmpId
                     + " is not connected. You will be notified when they are available.";
         }
 
-        // Check if from same branch
         if (targetClient.getBranchId().equals(this.branchId)) {
             return "ERROR|Cannot start chat with employees from the same branch";
         }
 
-        // Check if the target employee is busy selling
         synchronized (chain) {
             StoreBranch targetBranch = chain.getBranchById(targetClient.getBranchId());
             if (targetBranch != null && targetBranch.isCashierBusy(targetEmpId)) {
-                // Subscribe for notification when they become available
                 ChatAvailabilityObserver.subscribe(currentEmployee.getEmployeeId(), targetEmpId);
                 return "PENDING|Employee " + targetEmpId
                         + " is currently busy with a customer. You will be notified when they are available.";
             }
         }
 
-        // Check if the target employee is already in a chat
         if (targetClient.getChatPartnerId() != null) {
-            // Subscribe for notification when they become available
             ChatAvailabilityObserver.subscribe(currentEmployee.getEmployeeId(), targetEmpId);
             return "PENDING|Employee " + targetEmpId
                     + " is currently in another chat. You will be notified when they are available.";
         }
 
-        // Set chat partner tracking for both sides
         this.chatPartnerId = targetEmpId;
         targetClient.setChatPartnerId(currentEmployee.getEmployeeId());
 
-        // Send chat request to target client
         targetClient.sendChatRequest(currentEmployee.getEmployeeId(), currentEmployee.getFullName());
 
         Logger.write("Chat started: " + currentEmployee.getEmployeeId() + " -> " + targetEmpId);
@@ -600,15 +571,9 @@ public class ClientHandler implements Runnable {
         if (currentEmployee == null) {
             return "ERROR|Must be logged in";
         }
-        // Just acknowledge - the chat is already established
         return "OK|Chat accepted";
     }
 
-    /**
-     * Notify all employees who were waiting to chat with this employee.
-     * Called when this employee becomes available (after ending a chat or finishing
-     * a sale).
-     */
     private void notifyWaitingEmployees() {
         if (currentEmployee == null) {
             return;
@@ -618,7 +583,6 @@ public class ClientHandler implements Runnable {
         List<String> waitingEmployees = ChatAvailabilityObserver.getAndClearWaitingRequesters(myEmpId);
 
         for (String requesterEmpId : waitingEmployees) {
-            // Find the requester's client handler and notify them
             for (ClientHandler client : server.getConnectedClients()) {
                 if (client.getCurrentEmployee() != null &&
                         client.getCurrentEmployee().getEmployeeId().equals(requesterEmpId)) {
@@ -639,10 +603,8 @@ public class ClientHandler implements Runnable {
             return "ERROR|Missing target employee ID";
         }
 
-        // Clear chat partner for both sides
         this.chatPartnerId = null;
 
-        // Find the target client handler
         for (ClientHandler client : server.getConnectedClients()) {
             if (client.getCurrentEmployee() != null &&
                     client.getCurrentEmployee().getEmployeeId().equals(targetEmpId)) {
@@ -652,7 +614,6 @@ public class ClientHandler implements Runnable {
             }
         }
 
-        // Notify any observing managers that the chat has ended
         String chatKey = getChatKey(currentEmployee.getEmployeeId(), targetEmpId);
         List<String> observers;
         synchronized (chatObservers) {
@@ -672,7 +633,6 @@ public class ClientHandler implements Runnable {
 
         Logger.write("Chat ended by: " + currentEmployee.getEmployeeId());
 
-        // Notify anyone waiting to chat with either party that they're now available
         notifyWaitingEmployees();
 
         return "OK|Chat ended";
@@ -690,7 +650,6 @@ public class ClientHandler implements Runnable {
             return "ERROR|Missing target employee ID or message";
         }
 
-        // Find the target client handler
         ClientHandler targetClient = null;
         for (ClientHandler client : server.getConnectedClients()) {
             if (client.getCurrentEmployee() != null &&
@@ -704,10 +663,8 @@ public class ClientHandler implements Runnable {
             return "ERROR|Employee " + targetEmpId + " is no longer connected";
         }
 
-        // Send the message to the target client
         targetClient.sendChatMessage(currentEmployee.getEmployeeId(), message);
 
-        // Also send to any observing managers
         String chatKey = getChatKey(currentEmployee.getEmployeeId(), targetEmpId);
         List<String> observers = chatObservers.get(chatKey);
         if (observers != null) {
@@ -727,7 +684,6 @@ public class ClientHandler implements Runnable {
         return "OK|Message sent";
     }
 
-    // Method to send a chat request to this client
     public void sendChatRequest(String fromEmployeeId, String fromName) {
         if (out != null) {
             out.println("CHAT_REQUEST|" + fromEmployeeId + "|" + fromName);
@@ -735,7 +691,6 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    // Method to send a chat message to this client
     public void sendChatMessage(String fromEmployeeId, String message) {
         if (out != null) {
             out.println("CHAT_MESSAGE|" + fromEmployeeId + "|" + message);
@@ -743,7 +698,6 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    // Method to notify this client that chat has ended
     public void sendChatEnd(String byEmployeeId) {
         if (out != null) {
             out.println("CHAT_END|" + byEmployeeId);
@@ -751,7 +705,6 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    // Method to notify this client that a target employee is now available
     public void sendAvailabilityNotification(String availableEmployeeId) {
         if (out != null) {
             out.println("CHAT_AVAILABLE|" + availableEmployeeId);
@@ -775,14 +728,11 @@ public class ClientHandler implements Runnable {
         this.chatPartnerId = partnerId;
     }
 
-    // ============ Admin Chat Monitoring Methods ============
-
     private String handleGetActiveChats() {
         if (currentEmployee == null) {
             return "ERROR|Must be logged in";
         }
 
-        // Check if manager
         if (currentEmployee.getRole() != Role.MANAGER) {
             return "ERROR|Only managers can monitor chats";
         }
@@ -795,18 +745,15 @@ public class ClientHandler implements Runnable {
             if (client == this)
                 continue;
 
-            // Only include clients that are in an active chat
             if (client.getCurrentEmployee() != null && client.getChatPartnerId() != null) {
                 Employee emp = client.getCurrentEmployee();
                 String empId = emp.getEmployeeId();
                 String partnerId = client.getChatPartnerId();
 
-                // Create a normalized pair key to avoid duplicates (sort IDs alphabetically)
                 String pairKey = empId.compareTo(partnerId) < 0
                         ? empId + "|" + partnerId
                         : partnerId + "|" + empId;
 
-                // Skip if we've already added this chat pair
                 if (seenChatPairs.contains(pairKey)) {
                     continue;
                 }
@@ -834,7 +781,6 @@ public class ClientHandler implements Runnable {
             return "ERROR|Must be logged in";
         }
 
-        // Check if manager
         if (currentEmployee.getRole() != Role.MANAGER) {
             return "ERROR|Only managers can join chats";
         }
@@ -844,7 +790,6 @@ public class ClientHandler implements Runnable {
             return "ERROR|Missing target employee ID";
         }
 
-        // Find the target client and their chat partner
         ClientHandler targetClient = null;
         for (ClientHandler client : server.getConnectedClients()) {
             if (client.getCurrentEmployee() != null &&
@@ -863,7 +808,6 @@ public class ClientHandler implements Runnable {
             return "ERROR|Employee " + targetEmpId + " is not in an active chat";
         }
 
-        // Notify both participants that a manager joined
         String managerName = currentEmployee.getFullName();
         String managerId = currentEmployee.getEmployeeId();
         targetClient.sendChatMessage("SYSTEM",
@@ -878,7 +822,6 @@ public class ClientHandler implements Runnable {
             }
         }
 
-        // Add this manager to the chat observers
         String chatKey = getChatKey(targetEmpId, partnerId);
         synchronized (chatObservers) {
             chatObservers.computeIfAbsent(chatKey, k -> new java.util.ArrayList<>()).add(managerId);
@@ -899,7 +842,6 @@ public class ClientHandler implements Runnable {
         String managerId = currentEmployee.getEmployeeId();
         String managerName = currentEmployee.getFullName();
 
-        // Remove this manager from chat observers
         if (targetEmpId != null && chatPartner != null) {
             String chatKey = getChatKey(targetEmpId, chatPartner);
             synchronized (chatObservers) {
@@ -912,7 +854,6 @@ public class ClientHandler implements Runnable {
                 }
             }
 
-            // Notify both participants that the manager has left
             for (ClientHandler client : server.getConnectedClients()) {
                 if (client.getCurrentEmployee() != null) {
                     String empId = client.getCurrentEmployee().getEmployeeId();
@@ -934,7 +875,6 @@ public class ClientHandler implements Runnable {
             return "ERROR|Must be logged in";
         }
 
-        // Check if manager
         if (currentEmployee.getRole() != Role.MANAGER) {
             return "ERROR|Only managers can use this command";
         }
@@ -949,7 +889,6 @@ public class ClientHandler implements Runnable {
 
         String adminId = currentEmployee.getEmployeeId();
 
-        // Send message to both participants
         for (ClientHandler client : server.getConnectedClients()) {
             if (client.getCurrentEmployee() != null) {
                 String empId = client.getCurrentEmployee().getEmployeeId();

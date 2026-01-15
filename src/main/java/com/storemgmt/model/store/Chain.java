@@ -45,7 +45,6 @@ public class Chain {
         branches.add(branch);
     }
 
-    // Used by the server to handle requests from multiple clients
     public synchronized StoreBranch getBranchById(String branchId) {
         for (StoreBranch branch : branches) {
             if (branch.getBranchId().equals(branchId)) {

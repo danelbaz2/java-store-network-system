@@ -17,7 +17,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
     private String employeeName;
     private String role;
 
-    // Chat state
     private boolean pendingChatRequest = false;
     private String pendingChatFromId = null;
     private String pendingChatFromName = null;
@@ -28,8 +27,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
         this.console = new DataInputStream(System.in);
         this.client.setChatCallback(this);
     }
-
-    // ============ Chat Callback Implementation ============
 
     @Override
     public void onChatRequest(String fromEmployeeId, String fromName) {
@@ -44,7 +41,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
 
     @Override
     public void onChatMessage(String fromEmployeeId, String message) {
-        // Print message on new line
         System.out.println(fromEmployeeId + ": " + message);
     }
 
@@ -64,7 +60,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
 
         while (client.isConnected()) {
 
-            // Check if there's a pending chat request (someone wants to chat with us)
             if (pendingChatRequest) {
                 handleIncomingChatSession(null);
                 continue;
@@ -84,8 +79,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
             System.out.print("Choose option: ");
             String input = console.readLine();
 
-            // If a chat request came in while we were waiting for input,
-            // treat the input as the first chat message instead of menu option
             if (pendingChatRequest) {
                 handleIncomingChatSession(input);
                 continue;
@@ -135,21 +128,17 @@ public class BranchMenu implements BranchClient.ChatCallback {
     private void handleIncomingChatSession(String firstMessage) throws IOException {
         String partnerId = pendingChatFromId;
 
-        // Reset the pending flags
         pendingChatRequest = false;
         pendingChatFromId = null;
         pendingChatFromName = null;
         chatEnded = false;
 
-        // Mark that we're in chat mode
         client.setInChatMode(true);
         client.setChatPartnerId(partnerId);
 
-        // Acknowledge the chat session
         String acceptMsg = "ACCEPT_CHAT|" + client.getBranchId() + "|targetEmployeeId:" + partnerId;
         client.send(acceptMsg);
 
-        // If we have a first message (typed while waiting for menu input), send it
         if (firstMessage != null && !firstMessage.isEmpty() && !firstMessage.equalsIgnoreCase("exit")) {
             String sendMsg = "SEND_CHAT_MESSAGE|" + client.getBranchId()
                     + "|targetEmployeeId:" + partnerId
@@ -160,12 +149,10 @@ public class BranchMenu implements BranchClient.ChatCallback {
             }
         }
 
-        // Start the chat loop for the invited person
         while (!chatEnded && client.isConnected()) {
             String chatMessage = console.readLine();
 
             if (chatMessage == null || chatMessage.equalsIgnoreCase("exit")) {
-                // Notify partner that we're ending the chat
                 String endMsg = "END_CHAT|" + client.getBranchId() + "|targetEmployeeId:" + partnerId;
                 client.send(endMsg);
                 System.out.println("Chat ended.");
@@ -183,7 +170,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
             }
         }
 
-        // Exit chat mode
         client.setInChatMode(false);
         client.setChatPartnerId(null);
         chatEnded = false;
@@ -393,7 +379,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
         System.out.print("Password: ");
         String password = console.readLine();
 
-        // Send: LOGIN|branchId|employeeId:xxx|password:xxx
         String msg = "LOGIN|" + client.getBranchId() + "|employeeId:" + empId + "|password:" + password;
         String[] response = client.send(msg);
 
@@ -444,7 +429,7 @@ public class BranchMenu implements BranchClient.ChatCallback {
             System.out.println("-----------------------------------");
             String employees = data.get("employees");
             if (employees != null) {
-                System.out.println(employees.replace("\\n", "\n")); // Replace escaped newlines with real newlines
+                System.out.println(employees.replace("\\n", "\n"));
             }
         } else {
             printResponse(response);
@@ -457,7 +442,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
             return;
         }
 
-        // Step 1: Get list of connected employees from other branches
         String msg = "GET_OTHER_BRANCH_EMPLOYEES|" + client.getBranchId();
         String[] response = client.send(msg);
 
@@ -474,12 +458,10 @@ public class BranchMenu implements BranchClient.ChatCallback {
             return;
         }
 
-        // Display the list
         System.out.println("\n--- Connected Employees from Other Branches ---");
         System.out.println(employeeList.replace("\\n", "\n"));
         System.out.println("------------------------------------------------");
 
-        // Step 2: Ask user to select an employee
         System.out.print("Enter Employee ID to chat with (or 'cancel' to go back): ");
         String targetEmpId = console.readLine().toUpperCase();
 
@@ -488,11 +470,9 @@ public class BranchMenu implements BranchClient.ChatCallback {
             return;
         }
 
-        // Step 3: Start the chat session (server will notify the target)
         String startMsg = "START_CHAT|" + client.getBranchId() + "|targetEmployeeId:" + targetEmpId;
         String[] startResponse = client.send(startMsg);
 
-        // Handle PENDING response (target is unavailable but will be notified)
         if (startResponse[0].equals("PENDING")) {
             printResponse(startResponse);
             return;
@@ -503,12 +483,10 @@ public class BranchMenu implements BranchClient.ChatCallback {
             return;
         }
 
-        // Mark that we're in chat mode
         client.setInChatMode(true);
         client.setChatPartnerId(targetEmpId);
         chatEnded = false;
 
-        // Step 4: Start the chat loop
         System.out.println("\n==================================================");
         System.out.println("       Chat started with " + targetEmpId);
         System.out.println("==================================================");
@@ -518,7 +496,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
             String chatMessage = console.readLine();
 
             if (chatMessage == null || chatMessage.equalsIgnoreCase("exit")) {
-                // Notify partner that we're ending the chat
                 String endMsg = "END_CHAT|" + client.getBranchId() + "|targetEmployeeId:" + targetEmpId;
                 client.send(endMsg);
                 System.out.println("Chat ended.");
@@ -536,7 +513,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
             }
         }
 
-        // Exit chat mode
         client.setInChatMode(false);
         client.setChatPartnerId(null);
         chatEnded = false;
@@ -549,7 +525,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
             return;
         }
 
-        // Step 1: Get list of active chat sessions
         String msg = "GET_ACTIVE_CHATS|" + client.getBranchId();
         String[] response = client.send(msg);
 
@@ -566,12 +541,10 @@ public class BranchMenu implements BranchClient.ChatCallback {
             return;
         }
 
-        // Display the list
         System.out.println("\n--- Active Chat Sessions ---");
         System.out.println(chatList.replace("\\n", "\n"));
         System.out.println("----------------------------");
 
-        // Step 2: Ask admin to select a chat to join
         System.out.print("Enter Employee ID to join their chat (or 'cancel' to go back): ");
         String targetEmpId = console.readLine().toUpperCase();
 
@@ -580,7 +553,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
             return;
         }
 
-        // Step 3: Join the chat session
         String joinMsg = "JOIN_CHAT|" + client.getBranchId() + "|targetEmployeeId:" + targetEmpId;
         String[] joinResponse = client.send(joinMsg);
 
@@ -589,11 +561,9 @@ public class BranchMenu implements BranchClient.ChatCallback {
             return;
         }
 
-        // Extract the chat partner from response
         HashMap<String, String> joinData = BranchClient.getData(joinResponse);
         String chatPartnerId = joinData.get("chatPartnerId");
 
-        // Mark that we're in chat mode
         client.setInChatMode(true);
         client.setChatPartnerId(targetEmpId);
         chatEnded = false;
@@ -603,12 +573,10 @@ public class BranchMenu implements BranchClient.ChatCallback {
         System.out.println("==================================================");
         System.out.println("You can now send messages. Type 'exit' to leave.\n");
 
-        // Chat loop
         while (!chatEnded && client.isConnected()) {
             String chatMessage = console.readLine();
 
             if (chatMessage == null || chatMessage.equalsIgnoreCase("exit")) {
-                // Leave the chat (manager leaves, doesn't end the chat)
                 String leaveMsg = "LEAVE_CHAT|" + client.getBranchId()
                         + "|targetEmployeeId:" + targetEmpId
                         + "|chatPartnerId:" + chatPartnerId;
@@ -617,7 +585,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
                 break;
             }
 
-            // Send message to both participants
             String sendMsg = "ADMIN_CHAT_MESSAGE|" + client.getBranchId()
                     + "|targetEmployeeId:" + targetEmpId
                     + "|chatPartnerId:" + chatPartnerId
@@ -630,7 +597,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
             }
         }
 
-        // Exit chat mode
         client.setInChatMode(false);
         client.setChatPartnerId(null);
         chatEnded = false;
@@ -652,8 +618,6 @@ public class BranchMenu implements BranchClient.ChatCallback {
             role = null;
         }
     }
-
-    // ============ Input Validation Helpers ============
 
     private String readName() throws IOException {
         while (true) {

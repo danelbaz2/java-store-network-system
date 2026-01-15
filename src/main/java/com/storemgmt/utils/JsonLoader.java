@@ -16,22 +16,19 @@ public class JsonLoader {
 
     private static JsonObject json;
 
-    // Loads the JSON file from the given path
     public static void load(String path) {
         try (FileReader reader = new FileReader(path)) {
             json = JsonParser.parseReader(reader).getAsJsonObject();
         } catch (Exception e) {
             e.printStackTrace();
-            json = new JsonObject(); // fallback empty JSON
+            json = new JsonObject();
         }
     }
 
-    // Returns the loaded JSON object
     public static JsonObject get() {
         return json;
     }
 
-    // Returns an integer value for a given path
     public static int getInt(String path) {
         String[] keys = path.split("\\.");
         JsonObject current = json;
@@ -70,7 +67,6 @@ public class JsonLoader {
         return current.get(lastKey).getAsDouble();
     }
 
-    // Returns a string value for a given path
     public static String getString(String path) {
         String[] keys = path.split("\\.");
         JsonObject current = json;
@@ -90,7 +86,6 @@ public class JsonLoader {
         return current.get(lastKey).getAsString();
     }
 
-    // Returns a set of keys for a given path
     public static Set<String> getKeys(String path) {
         String[] keys = path.split("\\.");
         JsonObject current = json;
@@ -105,27 +100,22 @@ public class JsonLoader {
         return current.keySet();
     }
 
-    // Returns the last key in the path
     public static String getKey(String path) {
         String[] keys = path.split("\\.");
         return keys[keys.length - 1];
     }
 
-    // Removes an item from the JSON, e.g. remove("employees.E001")
     public static void remove(String path) {
         String[] parts = path.split("\\.");
         JsonObject parent = json;
 
-        // Navigate to the parent object
         for (int i = 0; i < parts.length - 1; i++) {
             parent = parent.getAsJsonObject(parts[i]);
         }
 
-        // Remove the last item
         parent.remove(parts[parts.length - 1]);
     }
 
-    // Adds a new key-value pair to the JSON object
     public static void add(String path, JsonElement value) {
         String[] keys = path.split("\\.");
         JsonObject current = json;
@@ -142,7 +132,7 @@ public class JsonLoader {
         }
 
         String lastKey = keys[keys.length - 1];
-        current.add(lastKey, value); // overwrites if exists
+        current.add(lastKey, value);
     }
 
     public static void set(String oldPath, int newValue) {
@@ -150,12 +140,10 @@ public class JsonLoader {
         add(oldPath, new JsonPrimitive(newValue));
     }
 
-    // Adds a string value to the JSON object
     public static void addString(String path, String value) {
         add(path, new JsonPrimitive(value));
     }
 
-    // Adds an integer value to the JSON object
     public static void addInt(String path, int value) {
         add(path, new JsonPrimitive(value));
     }

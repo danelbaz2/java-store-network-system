@@ -4,17 +4,6 @@ import com.storemgmt.utils.JsonLoader;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
-/**
- * Entry point for the branch client application.
- * 
- * Usage:
- * java ClientApp <branchId> [host] [port]
- * 
- * Examples:
- * java ClientApp BR01 # Connect to localhost:5000
- * java ClientApp BR02 localhost 5000 # Explicit host and port
- * java ClientApp BR01 192.168.1.100 5000 # Remote server
- */
 public class ClientApp {
 
     private static Scanner scanner = new Scanner(System.in);
@@ -48,7 +37,7 @@ public class ClientApp {
                 e.printStackTrace();
             }
 
-            client.disconnect(); // Close the connection
+            client.disconnect();
 
         } else {
             System.out.println("Could not connect to server. Check if the server is running.");

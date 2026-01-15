@@ -10,7 +10,7 @@ public class NewCustomer extends Customer {
 
     @Override
     public double getDiscount() {
-        return JsonLoader.getDouble("customers.NewCustomer"); // no discount
+        return JsonLoader.getDouble("customers.NewCustomer");
     }
 
     @Override

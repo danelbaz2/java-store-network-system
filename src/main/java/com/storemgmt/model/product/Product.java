@@ -66,18 +66,6 @@ public abstract class Product {
         }
     }
 
-    // private static double getPriceByType(String productType) {
-
-    // for (String productId : JsonLoader.getKeys("productCatalog")) {
-    // String type = JsonLoader.getString("productCatalog." + productId + ".type");
-    // if (type.equals(productType)) {
-    // return JsonLoader.getDouble("productCatalog." + productId + ".price");
-    // }
-    // }
-
-    // return 0;
-    // }
-
     @Override
     public boolean equals(Object o) {
         if (this == o)

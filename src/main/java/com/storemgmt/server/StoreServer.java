@@ -7,24 +7,13 @@ import java.util.ArrayList;
 
 import com.storemgmt.model.store.Chain;
 
-/**
- * TCP Server that listens for client connections.
- * 
- * How it works:
- * 1. Server starts and listens on a port (default 5000)
- * 2. When a client connects, server creates a new ClientHandler thread
- * 3. Each ClientHandler manages one client connection
- * 4. All handlers share the same Chain instance (synchronized for thread
- * safety)
- */
 public class StoreServer {
 
-    private final Chain chain; // Shared data - all branches and customers
-    private final int port; // Port to listen on
-    private ServerSocket serverSocket; // The server socket
-    private boolean running; // Flag to control server loop
+    private final Chain chain;
+    private final int port;
+    private ServerSocket serverSocket;
+    private boolean running;
 
-    // List of all connected clients (thread-safe list)
     private final ArrayList<ClientHandler> connectedClients;
 
     public StoreServer(Chain chain, int port) {
@@ -33,7 +22,6 @@ public class StoreServer {
         this.connectedClients = new ArrayList<>();
     }
 
-    // Start the server and begin accepting connections
     public void start() {
         running = true;
 
@@ -44,19 +32,15 @@ public class StoreServer {
             System.out.println("===========================================");
             System.out.println("Waiting for client connections...\n");
 
-            // Main server loop - accept connections forever
             while (running) {
                 try {
-                    // Wait for a client to connect (blocks until connection)
                     Socket clientSocket = serverSocket.accept();
 
                     System.out.println("New client connected from: " + clientSocket.getInetAddress());
 
-                    // Create a handler for this client
                     ClientHandler handler = new ClientHandler(clientSocket, chain, this);
                     connectedClients.add(handler);
 
-                    // Start the handler in a new thread
                     Thread handlerThread = new Thread(handler);
                     handlerThread.start();
 
@@ -71,7 +55,6 @@ public class StoreServer {
         }
     }
 
-    // Stop the server
     public void stop() {
         running = false;
         try {
@@ -85,18 +68,15 @@ public class StoreServer {
         }
     }
 
-    // Remove a client handler when it disconnects
     public void removeClient(ClientHandler handler) {
         connectedClients.remove(handler);
         System.out.println("Client disconnected. Active clients: " + connectedClients.size());
     }
 
-    // Get all connected clients (for chat broadcasting)
     public ArrayList<ClientHandler> getConnectedClients() {
         return connectedClients;
     }
 
-    // Get the chain instance
     public Chain getChain() {
         return chain;
     }
