@@ -132,6 +132,8 @@ public class ClientHandler implements Runnable {
                 return handleLeaveChat(data);
             case "ADMIN_CHAT_MESSAGE":
                 return handleAdminChatMessage(data);
+            case "VIEW_CUSTOMERS":
+                return handleViewCustomers();
             default:
                 return "ERROR|Unknown action: " + action;
         }
@@ -382,6 +384,26 @@ public class ClientHandler implements Runnable {
 
         return "OK|Started serving: (" + customer.getClass().getSimpleName() + ") " + customer.getFullName()
                 + "|Customers remaining in queue: " + branch.getQueueSize();
+    }
+
+    private String handleViewCustomers() {
+        if (currentEmployee == null) {
+            return "ERROR|Must be logged in";
+        }
+
+        synchronized (chain) {
+            StoreBranch branch = chain.getBranchById(branchId);
+            if (branch == null) {
+                return "ERROR|Branch not found";
+            }
+
+            StringBuilder str = new StringBuilder("OK|Customers in " + branch.getName() + "|");
+            for (Customer customer : branch.getCustomerQueue()) {
+                str.append(customer.toString()).append("|");
+            }
+
+            return str.toString();
+        }
     }
 
     private String handleGetEmployees() {

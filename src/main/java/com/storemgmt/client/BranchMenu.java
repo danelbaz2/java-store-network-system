@@ -116,6 +116,9 @@ public class BranchMenu implements BranchClient.ChatCallback {
                 case "9":
                     reportManagement();
                     break;
+                case "10":
+                    viewCustomers();
+                    break;
                 case "0":
                     System.out.println("Goodbye!");
                     return;
@@ -123,6 +126,12 @@ public class BranchMenu implements BranchClient.ChatCallback {
                     System.out.println("Invalid option!\n");
             }
         }
+    }
+
+    private void viewCustomers() throws IOException {
+        String msg = "VIEW_CUSTOMERS|" + client.getBranchId();
+        String[] response = client.send(msg);
+        printResponse(response);
     }
 
     private void handleIncomingChatSession(String firstMessage) throws IOException {
@@ -294,16 +303,10 @@ public class BranchMenu implements BranchClient.ChatCallback {
 
     private void removeEmployee() throws IOException {
         System.out.println("Enter the EMPLOYEE ID: ");
-        Set<String> existingIds = JsonLoader.getKeys("employees");
         String empId = console.readLine().toUpperCase();
 
         if (empId.equals(client.getEmployeeId())) {
             System.out.println("You cannot remove yourself.");
-            return;
-        }
-
-        if (!existingIds.contains(empId)) {
-            System.out.println("Employee ID " + empId + " does not exist.");
             return;
         }
 
@@ -352,6 +355,7 @@ public class BranchMenu implements BranchClient.ChatCallback {
         System.out.println("7. Remove Employee");
         System.out.println("8. Update Inventory");
         System.out.println("9. View Sell Report");
+        System.out.println("10. View Customers");
         System.out.println("0. Exit");
         System.out.println("========================================");
     }

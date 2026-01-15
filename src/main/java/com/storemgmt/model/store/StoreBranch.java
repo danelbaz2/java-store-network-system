@@ -73,6 +73,10 @@ public class StoreBranch {
         return customerQueue.size();
     }
 
+    public Queue<Customer> getCustomerQueue() {
+        return customerQueue;
+    }
+
     private void initializeInventory() {
         String inventoryPath = "branches." + branchId + ".inventory";
         try {

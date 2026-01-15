@@ -43,7 +43,8 @@ public abstract class Customer {
 
     @Override
     public String toString() {
-        return this.fullName + "\n" + this.id + "\n" + this.phoneNum + "\n";
+        return "Full Name: " + this.fullName + ", ID: " + this.id + ", Phone Number: " + this.phoneNum
+                + ", Customer Type: ";
     }
 
     public HashMap<Product, Integer> getShoppingList() {
