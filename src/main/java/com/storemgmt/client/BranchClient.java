@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.util.HashMap;
 
+@SuppressWarnings("deprecation")
 public class BranchClient {
 
     private String host;

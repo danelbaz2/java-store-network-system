@@ -2,8 +2,6 @@ package com.storemgmt.model.store;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -20,7 +18,6 @@ import com.storemgmt.model.employee.Employee;
 import com.storemgmt.model.product.*;
 import com.storemgmt.utils.JsonLoader;
 import com.google.gson.JsonParser;
-import java.time.LocalDate;
 
 public class StoreBranch {
     private String branchId;

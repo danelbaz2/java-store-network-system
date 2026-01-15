@@ -1,5 +1,7 @@
 package com.storemgmt.model.employee;
 
+import com.storemgmt.security.PasswordValidator;
+
 public class Employee {
     private final String employeeId;
     private final String fullName;
@@ -42,7 +44,10 @@ public class Employee {
     }
 
     public void setPassword(String newPassword) {
-        this.password = newPassword;
+        if (PasswordValidator.validate(newPassword).equals("valid"))
+            this.password = newPassword;
+        else
+            throw new IllegalArgumentException("Invalid password");
     }
 
     @Override

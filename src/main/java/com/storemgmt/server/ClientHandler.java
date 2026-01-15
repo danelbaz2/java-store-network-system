@@ -20,6 +20,7 @@ import com.storemgmt.model.store.StoreBranch;
 import com.storemgmt.utils.JsonLoader;
 import com.storemgmt.utils.Logger;
 
+@SuppressWarnings("deprecation")
 public class ClientHandler implements Runnable {
 
     private Socket socket;

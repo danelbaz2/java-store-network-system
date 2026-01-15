@@ -9,6 +9,7 @@ import com.storemgmt.model.employee.Role;
 import com.storemgmt.security.PasswordValidator;
 import com.storemgmt.utils.JsonLoader;
 
+@SuppressWarnings("deprecation")
 public class BranchMenu implements BranchClient.ChatCallback {
 
     private BranchClient client;

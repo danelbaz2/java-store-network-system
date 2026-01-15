@@ -1,8 +1,6 @@
 package com.storemgmt.client;
 
 import com.storemgmt.utils.JsonLoader;
-
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
