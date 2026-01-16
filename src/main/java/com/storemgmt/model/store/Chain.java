@@ -1,0 +1,56 @@
+package com.storemgmt.model.store;
+
+import java.util.LinkedList;
+import com.storemgmt.model.customer.Customer;
+
+public class Chain {
+
+    private String name;
+    private LinkedList<StoreBranch> branches;
+    private LinkedList<Customer> customers;
+
+    public Chain(String name) {
+        this.name = name;
+        this.branches = new LinkedList<StoreBranch>();
+        this.customers = new LinkedList<Customer>();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public LinkedList<Customer> getCustomers() {
+        return customers;
+    }
+
+    public void addCustomer(Customer customer) {
+        customers.add(customer);
+    }
+
+    public Customer getCustomer(String id) {
+        for (Customer c : customers) {
+            if (c.getId().equals(id))
+                return c;
+        }
+
+        System.out.println("Customer with ID: " + id + " does not exist in the chain " + this.name);
+        return null;
+    }
+
+    public LinkedList<StoreBranch> getBranches() {
+        return branches;
+    }
+
+    public void addBranch(StoreBranch branch) {
+        branches.add(branch);
+    }
+
+    public synchronized StoreBranch getBranchById(String branchId) {
+        for (StoreBranch branch : branches) {
+            if (branch.getBranchId().equals(branchId)) {
+                return branch;
+            }
+        }
+        return null;
+    }
+}

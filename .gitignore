@@ -1,9 +1,11 @@
-/target/
+# Maven
+target/
+
+# Logs
 logs.txt
-employees.csv
-.vscode/
-.idea/
-*.iml
-.classpath
-.project
-.settings/
+
+# Compiled classes
+*.class
+server_log.txt
+
+/reports
