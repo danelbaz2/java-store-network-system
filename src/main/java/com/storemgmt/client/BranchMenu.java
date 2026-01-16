@@ -9,6 +9,7 @@ import com.storemgmt.model.employee.Role;
 import com.storemgmt.security.PasswordValidator;
 import com.storemgmt.utils.JsonLoader;
 
+
 public class BranchMenu {
 
     private BranchClient client;
@@ -16,6 +17,10 @@ public class BranchMenu {
     private String employeeName;
     private String role;
     private volatile boolean waitingForReplyDecision = false;
+    private volatile boolean waitingForQueueDecision = false;
+    private String pendingQueueId = null; 
+    private boolean inChatMode = false;
+    private String currentChatPartner = null;
 
     public BranchMenu(BranchClient client) {
         this.client = client;
@@ -26,6 +31,16 @@ public class BranchMenu {
                 System.out.println("\nDo you want to reply? (Y/N):"); 
                 waitingForReplyDecision = true;
             }
+        });
+
+        client.setOnQueueUpdate((requesterId) -> {
+            System.out.println("\n************************************************");
+            System.out.println("  ALERT: User " + requesterId + " is waiting for a chat!");
+            System.out.println("************************************************");
+            System.out.print("Do you want to accept the call? (Y/N): ");
+            
+            pendingQueueId = requesterId; 
+            waitingForQueueDecision = true; 
         });
 
         client.setOnChatEnded(() -> {
@@ -39,7 +54,7 @@ public class BranchMenu {
     }
     
     private void printMenu() {
-        if ("ADMIN".equals(role)) {
+        if ("ADMIN".equalsIgnoreCase(role) || "MANAGER".equalsIgnoreCase(role)) {
             printAdminMenu();
         } else {
             printRegularMenu();
@@ -48,6 +63,7 @@ public class BranchMenu {
 
 
     public void run() throws IOException {
+        String input;
 
         while (client.isConnected()) {
 
@@ -55,30 +71,76 @@ public class BranchMenu {
                 continue;
             }
 
-            if (role.equals("ADMIN")) {
-                printAdminMenu();
-            } else {
-                printRegularMenu();
-            }
-            System.out.print("Choose option: ");
-            String input = console.readLine();
+            // if ("ADMIN".equalsIgnoreCase(role) || "MANAGER".equalsIgnoreCase(role)) {
+            //     printAdminMenu();
+            // } else {
+            //     printRegularMenu();
+            // }
+            // System.out.print("Choose option: ");
+            // String input = console.readLine();
 
-            if (waitingForReplyDecision) 
-            {
-                waitingForReplyDecision = false; 
+            if (waitingForReplyDecision) {
+                waitingForReplyDecision = false;
+                if (!inChatMode) {
+                    inChatMode = true;
+                    System.out.println(">> Press ENTER (empty) to exit chat, or type to reply.");
+                }
+            }
+            
+            if (!waitingForQueueDecision) {
+                if (!inChatMode) {
+                    if ("ADMIN".equalsIgnoreCase(role) || "MANAGER".equalsIgnoreCase(role)) {
+                        printAdminMenu();
+                    } else {
+                        printRegularMenu();
+                    }
+                    System.out.print("Choose option: ");
+                } else {
+                    System.out.print("[Chat] > ");
+                }
+            }
+
+            input = console.readLine();
+
+            if (waitingForQueueDecision) {
+                waitingForQueueDecision = false; 
 
                 if (input.equalsIgnoreCase("Y")) {
-                    sendMessage();
-                } 
-                else if (input.equalsIgnoreCase("N")) {
-                    endChat(); 
+                    System.out.println("Accepting chat from " + pendingQueueId + "...");
+                    
+                    String msg = "OPEN_CHAT|" + client.getBranchId()
+                            + "|from:" + client.getEmployeeId()
+                            + "|to:" + pendingQueueId
+                            + "|message:I am available now, let's talk.";
+                    
+                    String[] response = client.send(msg);
+                    if (response.length > 1) System.out.println(response[1]);
+
+                    currentChatPartner = pendingQueueId;
+                    inChatMode = true; 
+                    
+                } else if (input.equalsIgnoreCase("N")) {
+                    System.out.println("Ignored chat request.");
+                } else {
+                    System.out.println("Invalid input. Returning to menu...");
                 }
-                else{
-                    System.out.println("  > Error: Invalid input '" + input + "'. Please enter only Y or N.");
-                    System.out.print("Do you want to reply? (Y/N): ");
+
+                pendingQueueId = null; 
+                continue; 
+            }
+
+            if (inChatMode) {
+                if (input == null || input.trim().isEmpty()) {
+                    System.out.println("Exiting chat mode...");
+                    inChatMode = false;
+                    currentChatPartner = null;
+                } 
+                else {
+                    sendMessageInsideChat(input);
                 }
                 continue; 
             }
+
 
             switch (input) {
                 case "1":
@@ -114,6 +176,9 @@ public class BranchMenu {
                 case "11":
                     sendMessage();
                     break;
+                case "12":
+                    joinActiveChat();
+                    break;
                 case "0":
                     System.out.println("Goodbye!");
                     return;
@@ -128,6 +193,7 @@ public class BranchMenu {
             }
         }
     }
+    
 
     private void reportManagement() throws IOException {
         System.out.println("Choose display type: (1) By Branch, (2) By Category, (3) By Product");
@@ -155,6 +221,49 @@ public class BranchMenu {
             System.out.println(response[1] + "\n" + response[2] + "\n" + response[3]);
         } else {
             System.out.println(response[1]);
+        }
+    }
+
+    private void joinActiveChat() throws IOException {
+        if (!role.contains("MANAGER") && !role.equals("ADMIN")) {
+            System.out.println("Access Denied: Only managers can join chats.");
+            return;
+        }
+
+        String msgList = "GET_ACTIVE_CHATS|" + client.getBranchId();
+        String[] response = client.send(msgList);
+        
+        if (response[0].equals("ERROR")) {
+            System.out.println(response[1]);
+            return;
+        }
+        
+        HashMap<String, String> data = BranchClient.getData(response);
+        System.out.println(response[1]);
+        System.out.println(data.get("list").replace("\\n", "\n"));
+
+        System.out.print("Enter the Employee ID of someone in the chat you want to join: ");
+        String targetId = console.readLine().toUpperCase();
+
+        String msgJoin = "JOIN_CHAT|" + client.getBranchId() 
+                       + "|managerId:" + client.getEmployeeId()
+                       + "|targetId:" + targetId;
+
+        String[] joinResponse = client.send(msgJoin);
+        
+        if (joinResponse[0].equals("OK")) {
+            System.out.println("You have joined the chat!");
+
+            // Question for the manager/admin
+            System.out.print("\nDo you want to send a message? (Y/N): ");
+            String ans = console.readLine();
+
+            if (ans.equalsIgnoreCase("Y")) {
+                sendMessage(); 
+            }
+
+        } else {
+            System.out.println(joinResponse[1]);
         }
     }
 
@@ -324,6 +433,7 @@ public class BranchMenu {
         System.out.println("9. View Sell Report");
         System.out.println("10. Request Chat (find available employee)");
         System.out.println("11. Send Message");
+        System.out.println("12. Join Active Chat (Manager Only)");
         System.out.println("0. Exit");
         System.out.println("========================================");
     }
@@ -482,7 +592,7 @@ public class BranchMenu {
         }
     }
 
-    // ============ Input Validation Helpers ============
+    // ============ Input Validation  ============
 
     private String readName() throws IOException {
         while (true) {
@@ -581,6 +691,21 @@ public class BranchMenu {
         if (response.length > 1) {
             System.out.println(response[1]);
         }
+    }
+
+    private void sendMessageInsideChat(String message) throws IOException {
+        
+        if (currentChatPartner == null) {
+            System.out.print("Enter recipient ID for this chat: ");
+            currentChatPartner = console.readLine().toUpperCase();
+        }
+
+        String msgPacket = "SEND_CHAT|" + client.getBranchId() + 
+                           "|from:" + client.getEmployeeId() + 
+                           "|to:" + currentChatPartner +
+                           "|message:" + message;
+        
+        client.send(msgPacket);
     }
 
 

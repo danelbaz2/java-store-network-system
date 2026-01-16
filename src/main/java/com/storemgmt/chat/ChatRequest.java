@@ -1,23 +1,22 @@
 package com.storemgmt.chat;
 
-/**
- * Represents a request for a chat.
- */
+import java.time.LocalDateTime;
+
 public class ChatRequest {
+    private String requesterId;    
+    private LocalDateTime timestamp; 
 
-    private final String fromEmployeeId;
-    private final String fromBranchId;
-
-    public ChatRequest(String fromEmployeeId, String fromBranchId) {
-        this.fromEmployeeId = fromEmployeeId;
-        this.fromBranchId = fromBranchId;
+    public ChatRequest(String requesterId) {
+        this.requesterId = requesterId;
+        this.timestamp = LocalDateTime.now();
     }
 
-    public String getFromEmployeeId() {
-        return fromEmployeeId;
+    public String getRequesterId() {
+        return requesterId;
     }
 
-    public String getFromBranchId() {
-        return fromBranchId;
+    @Override
+    public String toString() {
+        return "Request from " + requesterId + " at " + timestamp;
     }
 }

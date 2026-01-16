@@ -12,6 +12,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.storemgmt.network.Message;
 import com.storemgmt.network.MessageType;
@@ -24,8 +26,11 @@ import com.storemgmt.model.store.Chain;
 import com.storemgmt.model.store.StoreBranch;
 import com.storemgmt.utils.JsonLoader;
 import com.storemgmt.utils.Logger;
+import com.storemgmt.chat.ChatManager;
+import com.storemgmt.chat.ChatObserver;
+import com.storemgmt.chat.ChatRequest;
 
-public class ClientHandler implements Runnable {
+public class ClientHandler implements Runnable, ChatObserver {
 
     private Socket socket;
     private Chain chain;
@@ -41,6 +46,7 @@ public class ClientHandler implements Runnable {
     private static final Map<String, String> activeChats = new HashMap<>();
 
     private static final Map<String, Set<String>> chatRooms = new HashMap<>();
+    
 
     public ClientHandler(Socket socket, Chain chain, StoreServer server) {
         this.socket = socket;
@@ -86,6 +92,7 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             System.out.println("Client disconnected: " + e.getMessage());
         } finally {
+            ChatManager.getInstance().removeObserver(this);
             cleanup();
         }
     }
@@ -130,6 +137,13 @@ public class ClientHandler implements Runnable {
             case "END_CHAT":
                 return handleEndChat(data);
 
+            // new 13.01.2026
+
+            case "GET_ACTIVE_CHATS":
+                return handleGetActiveChats();
+            case "JOIN_CHAT":
+                return handleJoinChat(data);
+
             default:
                 return "ERROR|Unknown action: " + action;
         }
@@ -155,6 +169,51 @@ public class ClientHandler implements Runnable {
             JsonLoader.save();
             return "OK|Inventory updated successfully";
         }
+    }
+
+    // Active chats to the manager
+    private String handleGetActiveChats() {
+        if (chatRooms.isEmpty()) {
+            return "ERROR|No active chats right now.";
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        int count = 1;
+        for (String key : chatRooms.keySet()) {
+            sb.append(count++).append(". Chat Room: ").append(key)
+              .append(" (Participants: ").append(chatRooms.get(key)).append(")\\n");
+        }
+        return "OK|Active Chats list:|list:" + sb.toString();
+    }
+
+    // Manager join the conversation
+    private String handleJoinChat(HashMap<String, String> data) {
+        String managerId = data.get("managerId");
+        String targetId = data.get("targetId");
+
+        String chatKey = activeChats.get(targetId);
+        if (chatKey == null) {
+            return "ERROR|Employee " + targetId + " is not currently in a chat.";
+        }
+
+        Set<String> participants = chatRooms.get(chatKey);
+        if (participants == null) return "ERROR|Room not found";
+        
+        participants.add(managerId);
+        activeChats.put(managerId, chatKey); 
+
+        for (String pid : participants) {
+            
+            if (pid.equals(managerId)) continue; 
+
+            ClientHandler handler = connectedClients.get(pid);
+            if (handler != null) {
+                handler.out.println("CHAT|System: MANAGER " + managerId + " has joined the chat.");
+                handler.out.flush();
+            }
+        }
+
+        return "OK|Joined chat successfully.";
     }
 
     private String handleShowReportByBranch() {
@@ -189,26 +248,41 @@ public class ClientHandler implements Runnable {
 
     private String handleEndChat(HashMap<String, String> data) {
         String fromId = data.get("from");
-        
-        String chatId = activeChats.get(fromId);
-        if (chatId == null) {
+        String chatKey = activeChats.get(fromId);
+
+        if (chatKey == null) {
             return "OK|Chat already closed";
         }
 
-        String[] parts = chatId.split("_");
+        Set<String> participants = chatRooms.get(chatKey);
+
+        String[] parts = chatKey.split("_");
         String targetId = parts[0].equals(fromId) ? parts[1] : parts[0];
 
-        System.out.println("[Server Log] Chat ended: " + fromId + " disconnected from " + targetId);
+        if (participants != null) {
+            for (String pid : participants) {
+                activeChats.remove(pid);
+                if (pid.equals(fromId)) continue;
 
-        ClientHandler targetHandler = connectedClients.get(targetId);
-        if (targetHandler != null) {
-            targetHandler.out.println("CHAT_ENDED|System: The chat was ended by " + fromId);
-            targetHandler.out.flush();
+                ClientHandler handler = connectedClients.get(pid);
+                if (handler != null) {
+                    handler.out.println("CHAT_ENDED|System: The chat was ended by " + fromId);
+                    handler.out.flush();
+                }
+            }
+            chatRooms.remove(chatKey);
         }
+        
+        // ClientHandler targetHandler = connectedClients.get(targetId);
+        // if (targetHandler != null) {
+        //     targetHandler.out.println("CHAT_ENDED|System: The chat was ended by " + fromId);
+        //     targetHandler.out.flush();
+        // }
 
-        activeChats.remove(fromId);
-        activeChats.remove(targetId);
+        // activeChats.remove(fromId);
+        // activeChats.remove(targetId);
 
+        System.out.println("[Server Log] Chat ended: " + chatKey);
         return "OK|Chat ended. Connection closed.";
     }
 
@@ -289,6 +363,9 @@ public class ClientHandler implements Runnable {
                         // register this employee as connected
                         connectedClients.put(emp.getEmployeeId(), this);
 
+                        // Register for queue updates
+                        ChatManager.getInstance().registerObserver(this);
+
                         return "OK|Login successful" +
                                 "|employeeName:" + emp.getFullName() +
                                 "|role:" + emp.getRole();
@@ -305,6 +382,8 @@ public class ClientHandler implements Runnable {
         if (currentEmployee == null) {
             return "ERROR|Not logged in";
         }
+
+        ChatManager.getInstance().removeObserver(this);
 
         connectedClients.remove(currentEmployee.getEmployeeId());
         activeChats.remove(currentEmployee.getEmployeeId());
@@ -394,20 +473,36 @@ public class ClientHandler implements Runnable {
     }
 
         private String handleRequestChat() {
-        if (currentEmployee == null) {
-            return "ERROR|Must be logged in to request chat";
+
+        String currentId = currentEmployee.getEmployeeId(); 
+        String targetId = null;
+        
+        if (currentEmployee == null) return "ERROR|Must be logged in";
+
+        // Searching for employee
+        for (String empId : connectedClients.keySet()) {
+            if (!empId.equals(currentId) && !activeChats.containsKey(empId)) {
+                targetId = empId;
+                break; 
+            }
         }
 
-        // Create a new chat request for the current employee
-        ChatRequest request = new ChatRequest(
-                currentEmployee.getEmployeeId(),
-                branchId
-        );
+        if (targetId != null) {
+            // Open Chat
+            HashMap<String, String> openData = new HashMap<>();
 
-        // Add the request to the server-side queue
-        server.getChatQueue().add(request);
+            openData.put("from", currentEmployee.getEmployeeId()); 
+            openData.put("to", targetId);
+            String msg = "User " + currentEmployee.getFullName() + " (" + currentId + ") requested a chat with you.";
+            openData.put("message", msg);
+            return handleOpenChat(openData);
+        }
 
-        return "OK|No available employees. You were added to the chat queue";
+        else {
+            // Add chat to the QUEUE
+            ChatManager.getInstance().addRequest(currentEmployee.getEmployeeId());
+            return "OK|All representatives are busy. You have been added to the waiting list.";
+        }
     }
 
 
@@ -416,23 +511,37 @@ public class ClientHandler implements Runnable {
         String fromId = data.get("from");
         String message = data.get("message");
 
-        String chatId = activeChats.get(fromId);
-        if (chatId == null) {
+        String chatKey = activeChats.get(fromId);
+        if (chatKey == null) {
             return "ERROR|No active chat";
         }
 
-        String[] parts = chatId.split("_");
-        String targetId = parts[0].equals(fromId) ? parts[1] : parts[0];
+        Set<String> participants = chatRooms.get(chatKey);
+        if (participants == null) return "ERROR|Chat room corrupted";
 
-        ClientHandler targetHandler = connectedClients.get(targetId);
-        if (targetHandler == null) {
-            return "ERROR|Chat partner disconnected";
+        // Send message to all the participants except me 
+        for (String participantId : participants) {
+            if (participantId.equals(fromId)) continue; // לא לשלוח לעצמי
+
+            ClientHandler handler = connectedClients.get(participantId);
+            if (handler != null) {
+                handler.out.println("CHAT|" + fromId + ": " + message);
+                handler.out.flush();
+            }
         }
 
-        targetHandler.out.println(
-            "CHAT|" + fromId + ": " + message
-        );
-        targetHandler.out.flush();
+        // String[] parts = chatKey.split("_");
+        // String targetId = parts[0].equals(fromId) ? parts[1] : parts[0];
+
+        // ClientHandler targetHandler = connectedClients.get(targetId);
+        // if (targetHandler == null) {
+        //     return "ERROR|Chat partner disconnected";
+        // }
+
+        // targetHandler.out.println(
+        //     "CHAT|" + fromId + ": " + message
+        // );
+        // targetHandler.out.flush();
 
         return "OK|Message sent";
     }
@@ -460,10 +569,14 @@ public class ClientHandler implements Runnable {
         activeChats.put(fromId, chatKey);
         activeChats.put(toId, chatKey);
 
+        // Create Chat Rooms
+        Set<String> participants = new HashSet<>();
+        participants.add(fromId);
+        participants.add(toId);
+        chatRooms.put(chatKey, participants);
+
         targetHandler.out.println("CHAT|System: Chat started with " + fromId);
-    
         targetHandler.out.println("CHAT|" + message);
-        
         targetHandler.out.flush();
 
         return "OK|Chat started with employee " + toId;
@@ -485,5 +598,17 @@ public class ClientHandler implements Runnable {
 
     public String getBranchId() {
         return branchId;
+    }
+
+    @Override
+    public void onQueueUpdate(ChatRequest nextRequest) {
+        
+        if (currentEmployee != null && 
+            !activeChats.containsKey(currentEmployee.getEmployeeId()) && 
+            !nextRequest.getRequesterId().equals(currentEmployee.getEmployeeId())) {
+
+            out.println("QUEUE_UPDATE|" + nextRequest.getRequesterId());
+            out.flush();
+        }
     }
 }

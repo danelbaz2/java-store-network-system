@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class BranchClient {
 
@@ -24,6 +25,7 @@ public class BranchClient {
     private final BlockingQueue<String> responseQueue = new LinkedBlockingQueue<>();
     private volatile boolean isListening = false; 
     private Runnable onChatEnded; 
+    private Consumer<String> onQueueUpdate;
 
 
     public BranchClient(String host, int port, String branchId) {
@@ -51,7 +53,7 @@ public class BranchClient {
 
     // Format: ACTION|branchId|k1:v1|k2:v2|...
 
-public String[] send(String message) {
+    public String[] send(String message) {
         String response = "";
         if (!connected) {
             return new String[] { "ERROR", "Not connected" };
@@ -76,6 +78,9 @@ public String[] send(String message) {
         }
     }
 
+    public void setOnQueueUpdate(Consumer<String> callback) {
+        this.onQueueUpdate = callback;
+    }
 
     // Parse response: OK|message|key1:value1|key2:value2
     private String[] parseResponse(String line) {
@@ -125,7 +130,8 @@ public String[] send(String message) {
                         String msgContent = line.substring(5);
                         System.out.println("\n[CHAT] " + msgContent);        
                         chatMessageReceived = true; 
-                        if (onChatMessage != null && !msgContent.startsWith("System: Chat started")) {
+
+                        if (onChatMessage != null ) {
                             onChatMessage.run();
                         }
                     }
@@ -136,6 +142,15 @@ public String[] send(String message) {
                             onChatEnded.run();
                         }
                     }
+
+                    else if (line.startsWith("QUEUE_UPDATE|")) {
+                        String requesterId = line.substring(13); 
+                        
+                        if (onQueueUpdate != null) {
+                            onQueueUpdate.accept(requesterId);
+                        }
+                    }
+
                     else{
                         responseQueue.offer(line);
                     }
