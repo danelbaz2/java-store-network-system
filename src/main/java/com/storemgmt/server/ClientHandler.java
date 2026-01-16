@@ -94,6 +94,12 @@ public class ClientHandler implements Runnable {
                 return handleLogin(data);
             case "LOGOUT":
                 return handleLogout();
+            case "SET_AVAILABLE":
+                isAvailableForChat = true;
+                return "OK|You are now available";
+            case "SET_UNAVAILABLE":
+                isAvailableForChat = false;
+                return "OK|You are now unavailable";
             case "GET_INVENTORY":
                 return handleGetInventory();
             case "SELL":
@@ -642,6 +648,7 @@ public class ClientHandler implements Runnable {
             if (client.getCurrentEmployee() != null &&
                     client.getCurrentEmployee().getEmployeeId().equals(targetEmpId)) {
                 client.setChatPartnerId(null);
+                client.setAvailableForChat(true);
                 client.sendChatEnd(currentEmployee.getEmployeeId());
                 break;
             }
@@ -900,6 +907,10 @@ public class ClientHandler implements Runnable {
 
     public boolean isAvailableForChat() {
         return isAvailableForChat;
+    }
+
+    public void setAvailableForChat(boolean availableForChat) {
+        isAvailableForChat = availableForChat;
     }
 
     private String handleAdminChatMessage(HashMap<String, String> data) {

@@ -198,6 +198,8 @@ public class BranchMenu implements BranchClient.ChatCallback {
     }
 
     private void reportManagement() throws IOException {
+        setAvailable(false);
+
         System.out.println("Choose display type: (1) By Branch, (2) By Category, (3) By Product");
         String input = console.readLine();
 
@@ -214,6 +216,8 @@ public class BranchMenu implements BranchClient.ChatCallback {
             default:
                 System.out.println("Invalid option!\n");
         }
+
+        setAvailable(true);
     }
 
     private void showReportByBranch() {
@@ -236,13 +240,19 @@ public class BranchMenu implements BranchClient.ChatCallback {
     }
 
     private void updateInventory() throws IOException {
+        setAvailable(false);
+
         String productId = readProductId();
-        if (productId == null)
+        if (productId == null) {
+            setAvailable(true);
             return;
+        }
 
         String quantity = readQuantity();
-        if (quantity == null)
+        if (quantity == null) {
+            setAvailable(true);
             return;
+        }
 
         String msg = "UPDATE_INVENTORY|"
                 + client.getBranchId()
@@ -251,6 +261,8 @@ public class BranchMenu implements BranchClient.ChatCallback {
 
         String[] response = client.send(msg);
         printResponse(response);
+
+        setAvailable(true);
     }
 
     private String readProductId() throws IOException {
@@ -288,6 +300,9 @@ public class BranchMenu implements BranchClient.ChatCallback {
     }
 
     private void addEmployee() throws IOException {
+
+        setAvailable(false);
+
         String empId = readEmployeeId();
         String fullName = readName();
         String phone = readPhone();
@@ -313,6 +328,15 @@ public class BranchMenu implements BranchClient.ChatCallback {
         } else {
             System.out.println(response[1]);
         }
+
+        setAvailable(true);
+    }
+
+    private void setAvailable(boolean available) {
+        if (available)
+            client.send("SET_AVAILABLE|" + client.getBranchId());
+        else
+            client.send("SET_UNAVAILABLE|" + client.getBranchId());
     }
 
     private String readBankAccount() throws IOException {
@@ -330,11 +354,14 @@ public class BranchMenu implements BranchClient.ChatCallback {
     }
 
     private void removeEmployee() throws IOException {
+        setAvailable(false);
+
         System.out.println("Enter the EMPLOYEE ID: ");
         String empId = console.readLine().toUpperCase();
 
         if (empId.equals(client.getEmployeeId())) {
             System.out.println("You cannot remove yourself.");
+            setAvailable(true);
             return;
         }
 
@@ -349,6 +376,8 @@ public class BranchMenu implements BranchClient.ChatCallback {
         } else {
             System.out.println(response[1]);
         }
+
+        setAvailable(true);
     }
 
     private void printRegularMenu() {
@@ -478,11 +507,14 @@ public class BranchMenu implements BranchClient.ChatCallback {
             return;
         }
 
+        setAvailable(false);
+
         String msg = "GET_OTHER_BRANCH_EMPLOYEES|" + client.getBranchId();
         String[] response = client.send(msg);
 
         if (!response[0].equals("OK")) {
             printResponse(response);
+            setAvailable(true);
             return;
         }
 
@@ -491,6 +523,7 @@ public class BranchMenu implements BranchClient.ChatCallback {
 
         if (employeeList == null || employeeList.isEmpty()) {
             System.out.println("No employees from other branches are currently connected.");
+            setAvailable(true);
             return;
         }
 
@@ -504,6 +537,7 @@ public class BranchMenu implements BranchClient.ChatCallback {
 
         if (targetEmpId.equals("CANCEL")) {
             System.out.println("Chat cancelled.");
+            setAvailable(true);
             return;
         }
 
@@ -512,11 +546,13 @@ public class BranchMenu implements BranchClient.ChatCallback {
 
         if (startResponse[0].equals("PENDING")) {
             printResponse(startResponse);
+            setAvailable(true);
             return;
         }
 
         if (!startResponse[0].equals("OK")) {
             printResponse(startResponse);
+            setAvailable(true);
             return;
         }
 
@@ -562,11 +598,14 @@ public class BranchMenu implements BranchClient.ChatCallback {
             return;
         }
 
+        setAvailable(false);
+
         String msg = "GET_ACTIVE_CHATS|" + client.getBranchId();
         String[] response = client.send(msg);
 
         if (!response[0].equals("OK")) {
             printResponse(response);
+            setAvailable(true);
             return;
         }
 
@@ -575,6 +614,7 @@ public class BranchMenu implements BranchClient.ChatCallback {
 
         if (chatList == null || chatList.isEmpty()) {
             System.out.println("No active chat sessions found.");
+            setAvailable(true);
             return;
         }
 
@@ -587,6 +627,7 @@ public class BranchMenu implements BranchClient.ChatCallback {
 
         if (targetEmpId.equals("CANCEL")) {
             System.out.println("Cancelled.");
+            setAvailable(true);
             return;
         }
 
@@ -595,6 +636,7 @@ public class BranchMenu implements BranchClient.ChatCallback {
 
         if (!joinResponse[0].equals("OK")) {
             printResponse(joinResponse);
+            setAvailable(true);
             return;
         }
 
