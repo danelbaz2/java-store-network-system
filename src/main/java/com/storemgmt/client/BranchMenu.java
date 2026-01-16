@@ -101,23 +101,35 @@ public class BranchMenu implements BranchClient.ChatCallback {
                     logout();
                     break;
                 case "6":
-                    if (role.equals("MANAGER")) {
-                        monitorChats();
-                    } else {
-                        addEmployee();
-                    }
+                    viewCustomers();
                     break;
                 case "7":
-                    removeEmployee();
+                    if (role.equals("MANAGER"))
+                        monitorChats();
+                    else if (role.equals("ADMIN"))
+                        addEmployee();
+                    else
+                        System.out.println("Invalid option!\n");
                     break;
                 case "8":
-                    updateInventory();
+                    if (role.equals("MANAGER"))
+                        updateInventory();
+                    else if (role.equals("ADMIN"))
+                        removeEmployee();
+                    else
+                        System.out.println("Invalid option!\n");
                     break;
                 case "9":
-                    reportManagement();
+                    if (role.equals("ADMIN"))
+                        updateInventory();
+                    else
+                        System.out.println("Invalid option!\n");
                     break;
                 case "10":
-                    viewCustomers();
+                    if (role.equals("ADMIN"))
+                        reportManagement();
+                    else
+                        System.out.println("Invalid option!\n");
                     break;
                 case "0":
                     System.out.println("Goodbye!");
@@ -282,6 +294,7 @@ public class BranchMenu implements BranchClient.ChatCallback {
         String branchId = readBranchId();
         String role = readRole();
         String password = readPassword();
+        String bankAccount = readBankAccount();
 
         String msg = "ADD_EMPLOYEE|"
                 + client.getBranchId()
@@ -290,7 +303,8 @@ public class BranchMenu implements BranchClient.ChatCallback {
                 + "|phone:" + phone
                 + "|branchId:" + branchId
                 + "|role:" + role
-                + "|password:" + password;
+                + "|password:" + password
+                + "|bankAccount:" + bankAccount;
 
         String[] response = client.send(msg);
 
@@ -298,6 +312,20 @@ public class BranchMenu implements BranchClient.ChatCallback {
             System.out.println("Employee added successfully!");
         } else {
             System.out.println(response[1]);
+        }
+    }
+
+    private String readBankAccount() throws IOException {
+        while (true) {
+            System.out.print("Bank Account (positive number): ");
+            String input = console.readLine();
+
+            if (!isAllDigits(input)) {
+                System.out.println("  Bank Account must contain only digits.");
+                continue;
+            }
+
+            return input;
         }
     }
 
@@ -335,6 +363,7 @@ public class BranchMenu implements BranchClient.ChatCallback {
         System.out.println("3. View Employees");
         System.out.println("4. Start Chat");
         System.out.println("5. Logout");
+        System.out.println("6. View Customers");
         System.out.println("0. Exit");
         System.out.println("========================================");
     }
@@ -351,11 +380,12 @@ public class BranchMenu implements BranchClient.ChatCallback {
         System.out.println("3. View Employees");
         System.out.println("4. Start Chat");
         System.out.println("5. Logout");
-        System.out.println("6. Add Employee");
-        System.out.println("7. Remove Employee");
-        System.out.println("8. Update Inventory");
-        System.out.println("9. View Sell Report");
-        System.out.println("10. View Customers");
+        System.out.println("6. View Customers");
+        System.out.println("7. Add Employee");
+        System.out.println("8. Remove Employee");
+        System.out.println("9. Update Inventory");
+        System.out.println("10. View Sell Report");
+
         System.out.println("0. Exit");
         System.out.println("========================================");
     }
@@ -372,7 +402,9 @@ public class BranchMenu implements BranchClient.ChatCallback {
         System.out.println("3. View Employees");
         System.out.println("4. Start Chat");
         System.out.println("5. Logout");
-        System.out.println("6. Monitor Chats");
+        System.out.println("6. View Customers");
+        System.out.println("7. Monitor Chats");
+        System.out.println("8. Update Inventory");
         System.out.println("0. Exit");
         System.out.println("========================================");
     }
@@ -467,6 +499,7 @@ public class BranchMenu implements BranchClient.ChatCallback {
         System.out.println("------------------------------------------------");
 
         System.out.print("Enter Employee ID to chat with (or 'cancel' to go back): ");
+
         String targetEmpId = console.readLine().toUpperCase();
 
         if (targetEmpId.equals("CANCEL")) {
@@ -693,7 +726,7 @@ public class BranchMenu implements BranchClient.ChatCallback {
     }
 
     private String readRole() throws IOException {
-        System.out.println("  Available roles: CASHIER, SELLER, MANAGER, SHIFT_MANAGER, ADMIN");
+        System.out.println("  Available roles: CASHIER, SELLER, MANAGER, ADMIN");
         while (true) {
             System.out.print("Role: ");
             String input = console.readLine().toUpperCase();
@@ -701,7 +734,7 @@ public class BranchMenu implements BranchClient.ChatCallback {
                 Role.valueOf(input);
                 return input;
             } catch (IllegalArgumentException e) {
-                System.out.println("  Invalid role. Choose: CASHIER, SELLER, MANAGER, SHIFT_MANAGER, or ADMIN");
+                System.out.println("  Invalid role. Choose: CASHIER, SELLER, MANAGER, or ADMIN");
             }
         }
     }

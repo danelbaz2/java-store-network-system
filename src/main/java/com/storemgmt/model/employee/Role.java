@@ -4,6 +4,5 @@ public enum Role {
     CASHIER,
     SELLER,
     MANAGER,
-    SHIFT_MANAGER,
     ADMIN
 }

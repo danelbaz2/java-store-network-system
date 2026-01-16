@@ -56,42 +56,48 @@
       "phone": "050-1111111",
       "branchId": "BR01",
       "role": "ADMIN",
-      "password": "Aa123456!"
+      "password": "Aa123456!",
+      "bankAccount": "123456789"
     },
     "E004": {
       "fullName": "Manager User",
       "phone": "050-4444444",
       "branchId": "BR02",
       "role": "Manager",
-      "password": "Manager123!"
+      "password": "Manager123!",
+      "bankAccount": "123456789"
     },
     "E005": {
       "fullName": "Shahaf Elbaz",
       "phone": "0507777373",
       "branchId": "BR02",
       "role": "ADMIN",
-      "password": "Aa123456!"
+      "password": "Aa123456!",
+      "bankAccount": "123456789"
     },
     "E008": {
       "fullName": "bla bla",
       "phone": "0526757919",
       "branchId": "BR01",
       "role": "CASHIER",
-      "password": "zxcvBnmgd1"
+      "password": "zxcvBnmgd1",
+      "bankAccount": "123456789"
     },
     "E006": {
       "fullName": "2345678",
       "phone": "0123456789",
       "branchId": "BR01",
       "role": "CASHIER",
-      "password": "Aa123456!"
+      "password": "Aa123456!",
+      "bankAccount": "123456789"
     },
     "E002": {
       "fullName": "Danilov",
       "phone": "0500000000",
       "branchId": "BR01",
       "role": "ADMIN",
-      "password": "Aa123456!"
+      "password": "Aa123456!",
+      "bankAccount": "123456789"
     }
   },
   "branches": {
@@ -120,7 +126,7 @@
           "stock": 0
         },
         "P008": {
-          "stock": 34
+          "stock": 29
         }
       }
     },

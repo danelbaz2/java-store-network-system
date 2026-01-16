@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.storemgmt.model.customer.Customer;
 import com.storemgmt.model.employee.Employee;
@@ -33,6 +34,7 @@ public class ClientHandler implements Runnable {
     private String branchId;
     private Employee currentEmployee;
 
+    private boolean isAvailableForChat = true;
     private String chatPartnerId = null;
 
     private static final Map<String, List<String>> chatObservers = new HashMap<>();
@@ -232,12 +234,14 @@ public class ClientHandler implements Runnable {
 
     private String handleAddEmployee(HashMap<String, String> data) {
 
+        isAvailableForChat = false;
         String empId = data.get("employeeId");
         String fullName = data.get("fullName");
         String phone = data.get("phone");
         String branchId = data.get("branchId");
         String role = data.get("role");
         String password = data.get("password");
+        String bankAccount = data.get("bankAccount");
 
         synchronized (chain) {
             StoreBranch branch = chain.getBranchById(branchId);
@@ -245,15 +249,22 @@ public class ClientHandler implements Runnable {
                 return "ERROR|Branch not found: " + branchId;
             }
 
-            Employee emp = new Employee(empId, fullName, phone, branchId, Role.valueOf(role), password);
+            Employee emp = new Employee(empId, fullName, phone, branchId, Role.valueOf(role), password, bankAccount);
             branch.addEmployee(emp);
             Logger.write("Employee added: " + empId);
+            isAvailableForChat = true;
             return "OK|Employee added successfully";
         }
     }
 
     private String handleRemoveEmployee(HashMap<String, String> data) {
+        isAvailableForChat = false;
         String empId = data.get("employeeId");
+
+        Set<String> existingIds = JsonLoader.getKeys("employees");
+        if (!existingIds.contains(empId))
+            return "ERROR|Employee not found: " + empId;
+
         String branchId = JsonLoader.getString("employees." + empId + ".branchId");
 
         synchronized (chain) {
@@ -263,12 +274,9 @@ public class ClientHandler implements Runnable {
             }
 
             Employee emp = branch.getEmployeeById(empId);
-            if (emp == null) {
-                return "ERROR|Employee not found: " + empId;
-            }
-
             branch.removeEmployee(emp);
             Logger.write("Employee removed: " + empId);
+            isAvailableForChat = true;
             return "OK|Employee removed successfully";
         }
     }
@@ -312,7 +320,7 @@ public class ClientHandler implements Runnable {
                     }
                 }
             }
-            return "ERROR|Employee not found: " + empId;
+            return "ERROR|Employee " + empId + " not found in branch " + branchId;
         }
     }
 
@@ -468,6 +476,9 @@ public class ClientHandler implements Runnable {
 
         for (ClientHandler client : server.getConnectedClients()) {
             if (client == this)
+                continue;
+
+            if (!client.isAvailableForChat())
                 continue;
 
             if (client.getCurrentEmployee() == null)
@@ -781,12 +792,7 @@ public class ClientHandler implements Runnable {
                 }
                 seenChatPairs.add(pairKey);
 
-                list.append(empId)
-                        .append(" - ")
-                        .append(emp.getFullName())
-                        .append(" <-> ")
-                        .append(partnerId)
-                        .append("\\n");
+                list.append(empId + " <-> " + partnerId + "\\n");
                 count++;
             }
         }
@@ -890,6 +896,10 @@ public class ClientHandler implements Runnable {
         Logger.write("Manager " + managerId + " left chat monitoring");
 
         return "OK|Left chat session";
+    }
+
+    public boolean isAvailableForChat() {
+        return isAvailableForChat;
     }
 
     private String handleAdminChatMessage(HashMap<String, String> data) {

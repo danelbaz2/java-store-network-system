@@ -62,13 +62,10 @@ public class ServerApp {
             String employeePhone = JsonLoader.getString(basePath + ".phone");
             String employeeRole = JsonLoader.getString(basePath + ".role").toUpperCase();
             String employeePassword = JsonLoader.getString(basePath + ".password");
+            String employeeBankAccount = JsonLoader.getString(basePath + ".bankAccount");
 
-            Employee employee = new Employee(employeeId,
-                    employeeName,
-                    employeePhone,
-                    employeeBranchId,
-                    Role.valueOf(employeeRole),
-                    employeePassword);
+            Employee employee = new Employee(employeeId, employeeName, employeePhone, employeeBranchId,
+                    Role.valueOf(employeeRole), employeePassword, employeeBankAccount);
 
             branch.getEmployees().add(employee);
             System.out.println("  Created employee: " + employeeName + " (" + employeeId + ") - " + employeeBranchId);
