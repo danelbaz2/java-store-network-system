@@ -572,13 +572,7 @@ public class ClientHandler implements Runnable {
         }
 
         if (targetClient == null) {
-            ChatAvailabilityObserver.subscribe(currentEmployee.getEmployeeId(), targetEmpId);
-            return "PENDING|Employee " + targetEmpId
-                    + " is not connected. You will be notified when they are available.";
-        }
-
-        if (targetClient.getBranchId().equals(this.branchId)) {
-            return "ERROR|Cannot start chat with employees from the same branch";
+            return "ERROR|You must choose an employee from the given list";
         }
 
         synchronized (chain) {
