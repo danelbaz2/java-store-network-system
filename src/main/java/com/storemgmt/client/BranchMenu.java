@@ -10,7 +10,7 @@ import com.storemgmt.security.PasswordValidator;
 import com.storemgmt.utils.JsonLoader;
 
 @SuppressWarnings("deprecation")
-public class BranchMenu implements BranchClient.ChatCallback {
+public class BranchMenu {
 
     private BranchClient client;
     private DataInputStream console;
@@ -25,10 +25,9 @@ public class BranchMenu implements BranchClient.ChatCallback {
     public BranchMenu(BranchClient client) {
         this.client = client;
         this.console = new DataInputStream(System.in);
-        this.client.setChatCallback(this);
+        this.client.setMenu(this);
     }
 
-    @Override
     public void onChatRequest(String fromEmployeeId, String fromName) {
         pendingChatRequest = true;
         pendingChatFromId = fromEmployeeId;
@@ -36,22 +35,19 @@ public class BranchMenu implements BranchClient.ChatCallback {
         System.out.println("\n\n==================================================");
         System.out.println("  *** INCOMING CHAT REQUEST from " + fromName + " (" + fromEmployeeId + ") ***");
         System.out.println("==================================================");
-        System.out.println("Type your messages below. Type 'exit' to end chat.\n");
+        System.out.println("Press 'enter' to start the chat\n");
     }
 
-    @Override
     public void onChatMessage(String fromEmployeeId, String message) {
         System.out.println(fromEmployeeId + ": " + message);
     }
 
-    @Override
     public void onChatEnded(String byEmployeeId) {
         chatEnded = true;
         System.out.println("\n*** Chat ended by " + byEmployeeId + " ***");
         System.out.println("Press Enter to return to menu...");
     }
 
-    @Override
     public void onAvailabilityNotification(String targetEmployeeId) {
         System.out.println("\n*** " + targetEmployeeId + " is now available for chat! ***\n");
     }

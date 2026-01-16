@@ -690,6 +690,10 @@ public class ClientHandler implements Runnable {
             return "ERROR|Missing target employee ID or message";
         }
 
+        if (this.chatPartnerId == null || !this.chatPartnerId.equals(targetEmpId)) {
+            return "ERROR|Chat session has ended";
+        }
+
         ClientHandler targetClient = null;
         for (ClientHandler client : server.getConnectedClients()) {
             if (client.getCurrentEmployee() != null &&
@@ -701,6 +705,11 @@ public class ClientHandler implements Runnable {
 
         if (targetClient == null) {
             return "ERROR|Employee " + targetEmpId + " is no longer connected";
+        }
+
+        if (targetClient.getChatPartnerId() == null ||
+                !targetClient.getChatPartnerId().equals(currentEmployee.getEmployeeId())) {
+            return "ERROR|Chat session has ended";
         }
 
         targetClient.sendChatMessage(currentEmployee.getEmployeeId(), message);
@@ -930,16 +939,32 @@ public class ClientHandler implements Runnable {
             return "ERROR|Missing required parameters";
         }
 
-        String adminId = currentEmployee.getEmployeeId();
-
+        ClientHandler targetClient = null;
+        ClientHandler partnerClient = null;
         for (ClientHandler client : server.getConnectedClients()) {
             if (client.getCurrentEmployee() != null) {
                 String empId = client.getCurrentEmployee().getEmployeeId();
-                if (empId.equals(targetEmpId) || empId.equals(chatPartnerId)) {
-                    client.sendChatMessage(adminId + " (Manager)", message);
+                if (empId.equals(targetEmpId)) {
+                    targetClient = client;
+                } else if (empId.equals(chatPartnerId)) {
+                    partnerClient = client;
                 }
             }
         }
+
+        if (targetClient == null || partnerClient == null) {
+            return "ERROR|Chat participants are no longer connected";
+        }
+
+        if (targetClient.getChatPartnerId() == null ||
+                !targetClient.getChatPartnerId().equals(chatPartnerId)) {
+            return "ERROR|Chat session has ended";
+        }
+
+        String adminId = currentEmployee.getEmployeeId();
+
+        targetClient.sendChatMessage(adminId + " (Manager)", message);
+        partnerClient.sendChatMessage(adminId + " (Manager)", message);
 
         Logger.write("Admin chat: " + adminId + " -> [" + targetEmpId + ", " + chatPartnerId + "]: " + message);
 

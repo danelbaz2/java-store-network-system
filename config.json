@@ -105,7 +105,7 @@
       "branchName": "Tel Aviv",
       "inventory": {
         "P001": {
-          "stock": 0
+          "stock": 500
         },
         "P002": {
           "stock": 0
@@ -134,13 +134,13 @@
       "branchName": "Jerusalem",
       "inventory": {
         "P001": {
-          "stock": 0
+          "stock": 100
         },
         "P002": {
-          "stock": 4
+          "stock": 1
         },
         "P003": {
-          "stock": 3
+          "stock": 2
         },
         "P004": {
           "stock": 1

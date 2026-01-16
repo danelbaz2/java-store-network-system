@@ -6,7 +6,7 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.util.HashMap;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // to get rid of the deprecated warnings for readLine(), etc
 public class BranchClient {
 
     private String host;
@@ -24,17 +24,7 @@ public class BranchClient {
 
     private boolean inChatMode = false;
     private String chatPartnerId = null;
-    private ChatCallback chatCallback = null;
-
-    public interface ChatCallback {
-        void onChatMessage(String fromEmployeeId, String message);
-
-        void onChatRequest(String fromEmployeeId, String fromName);
-
-        void onChatEnded(String byEmployeeId);
-
-        void onAvailabilityNotification(String targetEmployeeId);
-    }
+    private BranchMenu menu = null;
 
     public BranchClient(String host, int port, String branchId) {
         this.host = host;
@@ -63,27 +53,27 @@ public class BranchClient {
                         }
                         if (line.startsWith("CHAT_REQUEST|")) {
                             String[] parts = line.split("\\|");
-                            if (parts.length >= 3 && chatCallback != null) {
+                            if (parts.length >= 3 && menu != null) {
                                 String fromEmpId = parts[1];
                                 String fromName = parts[2];
-                                chatCallback.onChatRequest(fromEmpId, fromName);
+                                menu.onChatRequest(fromEmpId, fromName);
                             }
                         } else if (line.startsWith("CHAT_MESSAGE|")) {
                             String[] parts = line.split("\\|", 3);
-                            if (parts.length >= 3 && chatCallback != null) {
+                            if (parts.length >= 3 && menu != null) {
                                 String fromEmpId = parts[1];
                                 String message = parts[2];
-                                chatCallback.onChatMessage(fromEmpId, message);
+                                menu.onChatMessage(fromEmpId, message);
                             }
                         } else if (line.startsWith("CHAT_END|")) {
                             String[] parts = line.split("\\|");
-                            if (parts.length >= 2 && chatCallback != null) {
-                                chatCallback.onChatEnded(parts[1]);
+                            if (parts.length >= 2 && menu != null) {
+                                menu.onChatEnded(parts[1]);
                             }
                         } else if (line.startsWith("CHAT_AVAILABLE|")) {
                             String[] parts = line.split("\\|");
-                            if (parts.length >= 2 && chatCallback != null) {
-                                chatCallback.onAvailabilityNotification(parts[1]);
+                            if (parts.length >= 2 && menu != null) {
+                                menu.onAvailabilityNotification(parts[1]);
                             }
                         } else {
                             synchronized (responseLock) {
@@ -202,7 +192,7 @@ public class BranchClient {
         this.chatPartnerId = chatPartnerId;
     }
 
-    public void setChatCallback(ChatCallback callback) {
-        this.chatCallback = callback;
+    public void setMenu(BranchMenu menu) {
+        this.menu = menu;
     }
 }

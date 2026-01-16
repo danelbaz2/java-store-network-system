@@ -17,6 +17,7 @@ import com.storemgmt.model.customer.VIPCustomer;
 import com.storemgmt.model.employee.Employee;
 import com.storemgmt.model.product.*;
 import com.storemgmt.utils.JsonLoader;
+import com.storemgmt.utils.Logger;
 import com.google.gson.JsonParser;
 
 public class StoreBranch {
@@ -60,9 +61,9 @@ public class StoreBranch {
             } else {
                 customer = new VIPCustomer(name, id, phone);
             }
+            Logger.write("Generated customer " + id + " for branch " + branchId);
             customerQueue.add(customer);
         }
-        System.out.println("  Generated " + count + " customers for branch " + branchId);
     }
 
     public Customer getNextCustomer() {
