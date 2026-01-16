@@ -393,7 +393,7 @@ public class ClientHandler implements Runnable {
 
         branch.setCashierBusy(cashierId, true);
 
-        CustomerHandler handler = new CustomerHandler(customer, branch, cashierId);
+        CustomerHandler handler = new CustomerHandler(customer, branch, cashierId, this);
         branch.submitCustomerForCheckout(handler);
 
         return "OK|Started serving: (" + customer.getClass().getSimpleName() + ") " + customer.getFullName()
@@ -607,7 +607,7 @@ public class ClientHandler implements Runnable {
         return "OK|Chat accepted";
     }
 
-    private void notifyWaitingEmployees() {
+    public void notifyWaitingEmployees() {
         if (currentEmployee == null) {
             return;
         }

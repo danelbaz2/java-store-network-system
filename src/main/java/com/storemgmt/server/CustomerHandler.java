@@ -9,11 +9,13 @@ public class CustomerHandler implements Runnable {
     private final Customer customer;
     private final StoreBranch branch;
     private final String cashierId;
+    private final ClientHandler clientHandler;
 
-    public CustomerHandler(Customer customer, StoreBranch branch, String cashierId) {
+    public CustomerHandler(Customer customer, StoreBranch branch, String cashierId, ClientHandler clientHandler) {
         this.customer = customer;
         this.branch = branch;
         this.cashierId = cashierId;
+        this.clientHandler = clientHandler;
     }
 
     @Override
@@ -33,6 +35,7 @@ public class CustomerHandler implements Runnable {
             Thread.currentThread().interrupt();
         } finally {
             branch.setCashierBusy(cashierId, false);
+            clientHandler.notifyWaitingEmployees();
         }
     }
 }
