@@ -105,28 +105,28 @@
       "branchName": "Tel Aviv",
       "inventory": {
         "P001": {
-          "stock": 500
+          "stock": 50
         },
         "P002": {
-          "stock": 0
+          "stock": 50
         },
         "P003": {
-          "stock": 0
+          "stock": 50
         },
         "P004": {
-          "stock": 0
+          "stock": 50
         },
         "P005": {
-          "stock": 0
+          "stock": 50
         },
         "P006": {
-          "stock": 0
+          "stock": 50
         },
         "P007": {
-          "stock": 0
+          "stock": 50
         },
         "P008": {
-          "stock": 29
+          "stock": 50
         }
       }
     },
@@ -134,28 +134,28 @@
       "branchName": "Jerusalem",
       "inventory": {
         "P001": {
-          "stock": 100
+          "stock": 50
         },
         "P002": {
-          "stock": 1
+          "stock": 50
         },
         "P003": {
-          "stock": 2
+          "stock": 50
         },
         "P004": {
-          "stock": 1
+          "stock": 50
         },
         "P005": {
-          "stock": 1
+          "stock": 50
         },
         "P006": {
-          "stock": 0
+          "stock": 50
         },
         "P007": {
-          "stock": 1
+          "stock": 50
         },
         "P008": {
-          "stock": 0
+          "stock": 50
         }
       }
     }
