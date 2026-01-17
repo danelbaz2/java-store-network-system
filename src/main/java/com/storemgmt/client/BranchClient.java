@@ -75,6 +75,11 @@ public class BranchClient {
                             if (parts.length >= 2 && menu != null) {
                                 menu.onAvailabilityNotification(parts[1]);
                             }
+                        } else if (line.startsWith("CHAT_REQUEST_PENDING|")) {
+                            String[] parts = line.split("\\|");
+                            if (parts.length >= 2 && menu != null) {
+                                menu.onChatRequestPending(parts[1]);
+                            }
                         } else {
                             synchronized (responseLock) {
                                 pendingResponse = line;

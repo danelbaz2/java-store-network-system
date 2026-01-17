@@ -52,6 +52,11 @@ public class BranchMenu {
         System.out.println("\n*** " + targetEmployeeId + " is now available for chat! ***\n");
     }
 
+    public void onChatRequestPending(String requesterEmployeeId) {
+        System.out.println("\n*** " + requesterEmployeeId
+                + " has asked to chat with you, Press 4 to start a chat with him or any other employee ***\n");
+    }
+
     public void run() throws IOException {
 
         while (client.isConnected()) {
@@ -174,6 +179,10 @@ public class BranchMenu {
                 client.send(endMsg);
                 System.out.println("Chat ended.");
                 break;
+            }
+
+            if (chatMessage.trim().isEmpty()) {
+                continue;
             }
 
             String sendMsg = "SEND_CHAT_MESSAGE|" + client.getBranchId()
@@ -571,6 +580,10 @@ public class BranchMenu {
                 break;
             }
 
+            if (chatMessage.trim().isEmpty()) {
+                continue;
+            }
+
             String sendMsg = "SEND_CHAT_MESSAGE|" + client.getBranchId()
                     + "|targetEmployeeId:" + targetEmpId
                     + "|message:" + chatMessage;
@@ -658,6 +671,10 @@ public class BranchMenu {
                 client.send(leaveMsg);
                 System.out.println("Left the chat.");
                 break;
+            }
+
+            if (chatMessage.trim().isEmpty()) {
+                continue;
             }
 
             String sendMsg = "ADMIN_CHAT_MESSAGE|" + client.getBranchId()

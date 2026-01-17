@@ -620,6 +620,7 @@ public class ClientHandler implements Runnable {
                 if (client.getCurrentEmployee() != null &&
                         client.getCurrentEmployee().getEmployeeId().equals(requesterEmpId)) {
                     client.sendAvailabilityNotification(myEmpId);
+                    sendChatRequestPendingNotification(requesterEmpId);
                     break;
                 }
             }
@@ -751,6 +752,13 @@ public class ClientHandler implements Runnable {
     public void sendAvailabilityNotification(String availableEmployeeId) {
         if (out != null) {
             out.println("CHAT_AVAILABLE|" + availableEmployeeId);
+            out.flush();
+        }
+    }
+
+    public void sendChatRequestPendingNotification(String requesterEmployeeId) {
+        if (out != null) {
+            out.println("CHAT_REQUEST_PENDING|" + requesterEmployeeId);
             out.flush();
         }
     }
