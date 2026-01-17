@@ -308,7 +308,7 @@ public class StoreBranch {
     }
 
     public void shutdown() {
-        System.out.println("Sorry, we are closing down for the day. Please come back tomorrow.");
+        System.out.println("The branch " + this.name + " is closing down for today. Please come back tomorrow.");
         cashierPool.shutdown();
         try {
             cashierPool.awaitTermination(10, TimeUnit.SECONDS);

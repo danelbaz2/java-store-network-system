@@ -39,6 +39,9 @@ public class ClientHandler implements Runnable {
 
     private static final Map<String, List<String>> chatObservers = new HashMap<>();
 
+    // Get the chat key unique a chat session
+    // As exemple: if emp1 = "E001" and emp2 = "E002", the key will be "E001:E002"
+    // for both employees
     private static String getChatKey(String emp1, String emp2) {
         return emp1.compareTo(emp2) < 0 ? emp1 + ":" + emp2 : emp2 + ":" + emp1;
     }
@@ -64,10 +67,14 @@ public class ClientHandler implements Runnable {
 
                 System.out.println("Received: " + line);
 
+                // Format: action|branchId|key1:value1|key2:value2|...
+
+                // Parse the message
                 String[] parts = line.split("\\|");
                 String action = parts[0];
                 branchId = parts[1];
 
+                // Parse the data
                 HashMap<String, String> data = new HashMap<>();
                 for (int i = 2; i < parts.length; i++) {
                     String[] kv = parts[i].split(":", 2);
@@ -75,10 +82,11 @@ public class ClientHandler implements Runnable {
                         data.put(kv[0], kv[1]);
                     }
                 }
+                // End of parsing
 
                 String response = handleAction(action, data);
                 out.println(response);
-                out.flush();
+                out.flush(); // Clean the buffer
             }
 
         } catch (IOException e) {
@@ -709,10 +717,12 @@ public class ClientHandler implements Runnable {
 
         targetClient.sendChatMessage(currentEmployee.getEmployeeId(), message);
 
+        // Notify observers (the managers that are watching the chat)
         String chatKey = getChatKey(currentEmployee.getEmployeeId(), targetEmpId);
         List<String> observers = chatObservers.get(chatKey);
         if (observers != null) {
             for (String observerId : observers) {
+                // Finding the instance of the observer to send the message to
                 for (ClientHandler client : server.getConnectedClients()) {
                     if (client.getCurrentEmployee() != null &&
                             client.getCurrentEmployee().getEmployeeId().equals(observerId)) {
