@@ -75,6 +75,12 @@ public class BranchClient {
                             if (parts.length >= 2 && menu != null) {
                                 menu.onAvailabilityNotification(parts[1]);
                             }
+                        } else if (line.startsWith("CHAT_REQUEST_PENDING|")) {
+                            String[] parts = line.split("\\|");
+                            if (parts.length >= 2 && menu != null) {
+                                menu.onChatRequestPending(parts[1]);
+                            }
+
                         } else {
                             synchronized (responseLock) {
                                 pendingResponse = line;
@@ -88,7 +94,6 @@ public class BranchClient {
                 }
             });
             listenerThread.start();
-
             return connected;
         } catch (IOException e) {
             System.out.println("Failed to connect: " + e.getMessage());

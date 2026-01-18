@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import com.storemgmt.model.store.Chain;
+import com.storemgmt.model.store.StoreBranch;
 
 public class StoreServer {
 
@@ -58,6 +59,10 @@ public class StoreServer {
     public void stop() {
         running = false;
         try {
+            // Shutdown all branch thread pools
+            for (StoreBranch branch : chain.getBranches()) {
+                branch.shutdown();
+            }
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
             }
@@ -70,7 +75,7 @@ public class StoreServer {
 
     public void removeClient(ClientHandler handler) {
         connectedClients.remove(handler);
-        System.out.println("Client disconnected. Active clients: " + connectedClients.size());
+        System.out.println("Client disconnected");
     }
 
     public ArrayList<ClientHandler> getConnectedClients() {
