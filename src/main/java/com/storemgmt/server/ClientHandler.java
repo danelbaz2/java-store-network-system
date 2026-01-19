@@ -420,11 +420,16 @@ public class ClientHandler implements Runnable {
             }
 
             StringBuilder str = new StringBuilder("OK|Customers in " + branch.getName() + "|");
+            int count = 0;
             for (Customer customer : branch.getCustomerQueue()) {
                 str.append(customer.toString()).append("|");
+                count++;
             }
 
-            return str.toString();
+            if (count == 0)
+                return "OK|No customers in queue";
+            else
+                return str.toString();
         }
     }
 
@@ -528,6 +533,7 @@ public class ClientHandler implements Runnable {
         }
 
         ClientHandler targetClient = null;
+        // find the instance of the target client handler
         for (ClientHandler client : server.getConnectedClients()) {
             if (client == this)
                 continue;
@@ -568,6 +574,8 @@ public class ClientHandler implements Runnable {
         }
 
         ClientHandler targetClient = null;
+
+        // find the instance of the target client handler
         for (ClientHandler client : server.getConnectedClients()) {
             if (client == this)
                 continue;
@@ -623,6 +631,8 @@ public class ClientHandler implements Runnable {
         String myEmpId = currentEmployee.getEmployeeId();
         List<String> waitingEmployees = ChatAvailabilityObserver.getAndClearWaitingRequesters(myEmpId);
 
+        // notify waiting employees
+        // find the ClientHandler instance of each of the waiting employees
         for (String requesterEmpId : waitingEmployees) {
             for (ClientHandler client : server.getConnectedClients()) {
                 if (client.getCurrentEmployee() != null &&
@@ -657,6 +667,7 @@ public class ClientHandler implements Runnable {
             }
         }
 
+        // Notify managers (the managers that are watching the chat)
         String chatKey = getChatKey(currentEmployee.getEmployeeId(), targetEmpId);
         List<String> managers;
         synchronized (chatManagers) {
@@ -699,6 +710,8 @@ public class ClientHandler implements Runnable {
         }
 
         ClientHandler targetClient = null;
+
+        // find the instance of the target client handler
         for (ClientHandler client : server.getConnectedClients()) {
             if (client.getCurrentEmployee() != null &&
                     client.getCurrentEmployee().getEmployeeId().equals(targetEmpId)) {
@@ -791,6 +804,8 @@ public class ClientHandler implements Runnable {
     }
 
     private String handleGetActiveChats() {
+        // this function is used by a manager who wants to join an existing chat
+
         if (currentEmployee == null) {
             return "ERROR|Must be logged in";
         }
@@ -834,6 +849,8 @@ public class ClientHandler implements Runnable {
     }
 
     private String handleJoinChat(HashMap<String, String> data) {
+        // this function is used by a manager who wants to join an existing chat
+
         if (currentEmployee == null) {
             return "ERROR|Must be logged in";
         }
@@ -848,6 +865,8 @@ public class ClientHandler implements Runnable {
         }
 
         ClientHandler targetClient = null;
+
+        // find the instance of the target client handler
         for (ClientHandler client : server.getConnectedClients()) {
             if (client.getCurrentEmployee() != null &&
                     client.getCurrentEmployee().getEmployeeId().equals(targetEmpId)) {
@@ -865,6 +884,8 @@ public class ClientHandler implements Runnable {
             return "ERROR|Employee " + targetEmpId + " is not in an active chat";
         }
 
+        // notify both employees in the chat that a manager has joined
+
         String managerName = currentEmployee.getFullName();
         String managerId = currentEmployee.getEmployeeId();
         targetClient.sendChatMessage("SYSTEM",
@@ -880,6 +901,8 @@ public class ClientHandler implements Runnable {
         }
 
         String chatKey = getChatKey(targetEmpId, partnerId);
+
+        // add the manager to the 'chatManagers' Map
         synchronized (chatManagers) {
             chatManagers.computeIfAbsent(chatKey, k -> new java.util.ArrayList<>()).add(managerId);
         }
@@ -979,7 +1002,7 @@ public class ClientHandler implements Runnable {
         targetClient.sendChatMessage(adminId + " (Manager)", message);
         partnerClient.sendChatMessage(adminId + " (Manager)", message);
 
-        Logger.write("Admin chat: " + adminId + " -> [" + targetEmpId + ", " + chatPartnerId + "]: " + message);
+        Logger.write("Manager chat: " + adminId + " -> [" + targetEmpId + ", " + chatPartnerId + "]: " + message);
 
         return "OK|Message sent to both participants";
     }

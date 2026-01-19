@@ -1,7 +1,5 @@
 package com.storemgmt.model.employee;
 
-import com.storemgmt.security.PasswordValidator;
-
 public class Employee {
     private final String employeeId;
     private final String fullName;
