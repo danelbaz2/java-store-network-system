@@ -37,7 +37,7 @@ public class ClientHandler implements Runnable {
     private boolean isAvailableForChat = true;
     private String chatPartnerId = null;
 
-    private static final Map<String, List<String>> chatObservers = new HashMap<>();
+    private static final Map<String, List<String>> chatManagers = new HashMap<>();
 
     // Get the chat key unique a chat session
     // As exemple: if emp1 = "E001" and emp2 = "E002", the key will be "E001:E002"
@@ -658,15 +658,16 @@ public class ClientHandler implements Runnable {
         }
 
         String chatKey = getChatKey(currentEmployee.getEmployeeId(), targetEmpId);
-        List<String> observers;
-        synchronized (chatObservers) {
-            observers = chatObservers.remove(chatKey);
+        List<String> managers;
+        synchronized (chatManagers) {
+            managers = chatManagers.remove(chatKey);
         }
-        if (observers != null) {
-            for (String observerId : observers) {
+        if (managers != null) {
+            for (String managerId : managers) {
+                // gets the instance of the ClientManager that belongs to this manager
                 for (ClientHandler client : server.getConnectedClients()) {
                     if (client.getCurrentEmployee() != null &&
-                            client.getCurrentEmployee().getEmployeeId().equals(observerId)) {
+                            client.getCurrentEmployee().getEmployeeId().equals(managerId)) {
                         client.sendChatEnd(currentEmployee.getEmployeeId());
                         break;
                     }
@@ -717,15 +718,15 @@ public class ClientHandler implements Runnable {
 
         targetClient.sendChatMessage(currentEmployee.getEmployeeId(), message);
 
-        // Notify observers (the managers that are watching the chat)
+        // Notify managers (the managers that are watching the chat)
         String chatKey = getChatKey(currentEmployee.getEmployeeId(), targetEmpId);
-        List<String> observers = chatObservers.get(chatKey);
-        if (observers != null) {
-            for (String observerId : observers) {
-                // Finding the instance of the observer to send the message to
+        List<String> managers = chatManagers.get(chatKey);
+        if (managers != null) {
+            for (String managerId : managers) {
+                // Finding the instance of the manager to send the message to
                 for (ClientHandler client : server.getConnectedClients()) {
                     if (client.getCurrentEmployee() != null &&
-                            client.getCurrentEmployee().getEmployeeId().equals(observerId)) {
+                            client.getCurrentEmployee().getEmployeeId().equals(managerId)) {
                         client.sendChatMessage(currentEmployee.getEmployeeId(), message);
                         break;
                     }
@@ -879,8 +880,8 @@ public class ClientHandler implements Runnable {
         }
 
         String chatKey = getChatKey(targetEmpId, partnerId);
-        synchronized (chatObservers) {
-            chatObservers.computeIfAbsent(chatKey, k -> new java.util.ArrayList<>()).add(managerId);
+        synchronized (chatManagers) {
+            chatManagers.computeIfAbsent(chatKey, k -> new java.util.ArrayList<>()).add(managerId);
         }
 
         Logger.write("Manager " + managerId + " joined chat between " + targetEmpId + " and " + partnerId);
@@ -900,12 +901,12 @@ public class ClientHandler implements Runnable {
 
         if (targetEmpId != null && chatPartner != null) {
             String chatKey = getChatKey(targetEmpId, chatPartner);
-            synchronized (chatObservers) {
-                List<String> observers = chatObservers.get(chatKey);
-                if (observers != null) {
-                    observers.remove(managerId);
-                    if (observers.isEmpty()) {
-                        chatObservers.remove(chatKey);
+            synchronized (chatManagers) {
+                List<String> managers = chatManagers.get(chatKey);
+                if (managers != null) {
+                    managers.remove(managerId);
+                    if (managers.isEmpty()) {
+                        chatManagers.remove(chatKey);
                     }
                 }
             }
