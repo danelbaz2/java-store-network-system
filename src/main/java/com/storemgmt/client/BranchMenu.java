@@ -41,6 +41,9 @@ public class BranchMenu {
     }
 
     public void onChatEnded(String byEmployeeId) {
+        if (!client.isInChatMode())
+            return;
+
         chatEnded = true;
         System.out.println("\n*** Chat ended by " + byEmployeeId + " ***");
         System.out.println("Press Enter to return to menu...");
@@ -180,7 +183,7 @@ public class BranchMenu {
         String acceptMsg = "ACCEPT_CHAT|" + client.getBranchId() + "|targetEmployeeId:" + partnerId;
         client.send(acceptMsg);
 
-        if (!firstMessage.isEmpty()) {
+        if (firstMessage != null && !firstMessage.isEmpty()) {
             String sendMsg = "SEND_CHAT_MESSAGE|" + client.getBranchId()
                     + "|targetEmployeeId:" + partnerId
                     + "|message:" + firstMessage;
@@ -218,7 +221,6 @@ public class BranchMenu {
         client.setInChatMode(false);
         client.setChatPartnerId(null);
         chatEnded = false;
-        System.out.println("\nReturning to main menu...\n");
     }
 
     private void reportManagement() throws IOException {
@@ -506,6 +508,7 @@ public class BranchMenu {
             return;
         }
 
+        setAvailable(true);
         String startMsg = "START_CHAT|" + client.getBranchId() + "|targetEmployeeId:" + targetEmpId;
         String[] startResponse = client.send(startMsg);
 
@@ -558,7 +561,6 @@ public class BranchMenu {
         client.setInChatMode(false);
         client.setChatPartnerId(null);
         chatEnded = false;
-        System.out.println("\nReturning to main menu...\n");
     }
 
     private void monitorChats() throws IOException {
@@ -652,7 +654,6 @@ public class BranchMenu {
         client.setInChatMode(false);
         client.setChatPartnerId(null);
         chatEnded = false;
-        System.out.println("\nReturning to main menu...\n");
     }
 
     private void logout() {

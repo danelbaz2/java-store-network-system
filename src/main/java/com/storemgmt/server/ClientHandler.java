@@ -904,7 +904,12 @@ public class ClientHandler implements Runnable {
 
         // add the manager to the 'chatManagers' Map
         synchronized (chatManagers) {
-            chatManagers.computeIfAbsent(chatKey, k -> new java.util.ArrayList<>()).add(managerId);
+            List<String> managers = chatManagers.get(chatKey);
+            if (managers == null) {
+                managers = new java.util.ArrayList<>();
+                chatManagers.put(chatKey, managers);
+            }
+            managers.add(managerId);
         }
 
         Logger.write("Manager " + managerId + " joined chat between " + targetEmpId + " and " + partnerId);
@@ -935,9 +940,19 @@ public class ClientHandler implements Runnable {
             }
 
             for (ClientHandler client : server.getConnectedClients()) {
-                if (client.getCurrentEmployee() != null) {
-                    String empId = client.getCurrentEmployee().getEmployeeId();
-                    if (empId.equals(targetEmpId) || empId.equals(chatPartner)) {
+                if (client.getCurrentEmployee() == null)
+                    continue;
+
+                String empId = client.getCurrentEmployee().getEmployeeId();
+
+                // Only notify if the client is still in the chat with the other participant
+                if (empId.equals(targetEmpId)) {
+                    if (client.getChatPartnerId() != null && client.getChatPartnerId().equals(chatPartner)) {
+                        client.sendChatMessage("SYSTEM",
+                                "Manager '" + managerName + "'' (" + managerId + ") has left the chat");
+                    }
+                } else if (empId.equals(chatPartner)) {
+                    if (client.getChatPartnerId() != null && client.getChatPartnerId().equals(targetEmpId)) {
                         client.sendChatMessage("SYSTEM",
                                 "Manager '" + managerName + "'' (" + managerId + ") has left the chat");
                     }
