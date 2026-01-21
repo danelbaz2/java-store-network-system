@@ -889,13 +889,13 @@ public class ClientHandler implements Runnable {
         String managerName = currentEmployee.getFullName();
         String managerId = currentEmployee.getEmployeeId();
         targetClient.sendChatMessage("SYSTEM",
-                "Manager '" + managerName + "'' (" + managerId + ") has joined the chat");
+                "Manager '" + managerName + "' (" + managerId + ") has joined the chat");
 
         for (ClientHandler client : server.getConnectedClients()) {
             if (client.getCurrentEmployee() != null &&
                     client.getCurrentEmployee().getEmployeeId().equals(partnerId)) {
                 client.sendChatMessage("SYSTEM",
-                        "Manager '" + managerName + "'' (" + managerId + ") has joined the chat");
+                        "Manager '" + managerName + "' (" + managerId + ") has joined the chat");
                 break;
             }
         }
