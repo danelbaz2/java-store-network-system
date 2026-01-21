@@ -949,12 +949,12 @@ public class ClientHandler implements Runnable {
                 if (empId.equals(targetEmpId)) {
                     if (client.getChatPartnerId() != null && client.getChatPartnerId().equals(chatPartner)) {
                         client.sendChatMessage("SYSTEM",
-                                "Manager '" + managerName + "'' (" + managerId + ") has left the chat");
+                                "Manager '" + managerName + "' (" + managerId + ") has left the chat");
                     }
                 } else if (empId.equals(chatPartner)) {
                     if (client.getChatPartnerId() != null && client.getChatPartnerId().equals(targetEmpId)) {
                         client.sendChatMessage("SYSTEM",
-                                "Manager '" + managerName + "'' (" + managerId + ") has left the chat");
+                                "Manager '" + managerName + "' (" + managerId + ") has left the chat");
                     }
                 }
             }
