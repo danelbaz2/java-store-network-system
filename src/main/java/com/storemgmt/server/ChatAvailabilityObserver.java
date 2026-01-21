@@ -10,12 +10,9 @@ public class ChatAvailabilityObserver {
     private static final Map<String, List<String>> pendingChatRequests = new HashMap<>();
 
     public static synchronized void subscribe(String requesterEmpId, String targetEmpId) {
-        List<String> requesters = pendingChatRequests.get(targetEmpId);
-        if (requesters == null) {
-            requesters = new ArrayList<>();
-            pendingChatRequests.put(targetEmpId, requesters);
-        }
-        requesters.add(requesterEmpId);
+        pendingChatRequests
+                .computeIfAbsent(targetEmpId, k -> new ArrayList<>())
+                .add(requesterEmpId);
     }
 
     public static synchronized void unsubscribe(String requesterEmpId) {

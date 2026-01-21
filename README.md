@@ -1,2 +1,24 @@
 # java-store-network-system
-Client-Server system for store network management in Java
+
+## Client-Server system for store network management in Java
+
+### סטודנטים:
+
+- אנה פומורצב, 100000001
+- אלמוג שוורץ, 100000002
+- אביב מזרחי, 100000003
+- שחף אטיאס, 100000004
+- דן אלבז, 100000005
+- עודד סבג, 100000006
+
+> הסבר קצר על הפעלת המערכת:
+
+## 1. הפעלת השרת:
+
+מריצים את הסקריפט run_server.bat
+
+## 2. הפעלת הלקוח:
+
+מריצים את הסקריפט run_client.bat
+מזינים נתונים לפי מה שמוצג.
+ניתן להעזר בקובץ config.json על מנת להזין את הנתונים הרלוונאטיים.

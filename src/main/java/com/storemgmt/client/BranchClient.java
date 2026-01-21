@@ -107,6 +107,7 @@ public class BranchClient {
         }
 
         try {
+            // Manage the response lock to prevent race conditions
             synchronized (responseLock) {
                 pendingResponse = null;
 
@@ -114,7 +115,8 @@ public class BranchClient {
                 out.flush();
 
                 while (pendingResponse == null && connected) {
-                    responseLock.wait(30000);
+                    // Wait for the response of the server
+                    responseLock.wait(120000);
                     if (pendingResponse == null) {
                         return new String[] { "ERROR", "Timeout" };
                     }

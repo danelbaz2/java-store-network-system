@@ -33,7 +33,7 @@ public class BranchMenu {
         System.out.println("\n\n==================================================");
         System.out.println("  *** INCOMING CHAT REQUEST from " + fromName + " (" + fromEmployeeId + ") ***");
         System.out.println("==================================================");
-        System.out.println("Type your messages, or press enter to end chat.\n");
+        System.out.print("Accept chat? (Y/N): ");
     }
 
     public void onChatMessage(String fromEmployeeId, String message) {
@@ -177,21 +177,25 @@ public class BranchMenu {
         pendingChatFromId = null;
         chatEnded = false;
 
+        // If user already typed something (from menu prompt), use it as the answer
+        String answer;
+        if (firstMessage != null && !firstMessage.isEmpty()) {
+            answer = firstMessage.trim().toUpperCase();
+        } else {
+            answer = console.readLine().trim().toUpperCase();
+        }
+        if (!answer.equals("Y")) {
+            String endMsg = "END_CHAT|" + client.getBranchId() + "|targetEmployeeId:" + partnerId;
+            client.send(endMsg);
+            System.out.println("Chat declined.");
+            return;
+        }
+
         client.setInChatMode(true);
         client.setChatPartnerId(partnerId);
-
+        System.out.println("Type your messages, or press enter to end chat.\n");
         String acceptMsg = "ACCEPT_CHAT|" + client.getBranchId() + "|targetEmployeeId:" + partnerId;
         client.send(acceptMsg);
-
-        if (firstMessage != null && !firstMessage.isEmpty()) {
-            String sendMsg = "SEND_CHAT_MESSAGE|" + client.getBranchId()
-                    + "|targetEmployeeId:" + partnerId
-                    + "|message:" + firstMessage;
-            String[] sendResponse = client.send(sendMsg);
-            if (!sendResponse[0].equals("OK")) {
-                System.out.println("Failed to send: " + (sendResponse.length > 1 ? sendResponse[1] : "Unknown error"));
-            }
-        }
 
         while (!chatEnded && client.isConnected()) {
             String chatMessage = console.readLine();
@@ -360,9 +364,9 @@ public class BranchMenu {
 
     private void setAvailable(boolean available) {
         if (available)
-            client.send("SET_AVAILABLE|" + client.getBranchId() + client.getEmployeeId());
+            client.send("SET_AVAILABLE|" + client.getBranchId());
         else
-            client.send("SET_UNAVAILABLE|" + client.getBranchId() + client.getEmployeeId());
+            client.send("SET_UNAVAILABLE|" + client.getBranchId());
     }
 
     private String readBankAccount() throws IOException {

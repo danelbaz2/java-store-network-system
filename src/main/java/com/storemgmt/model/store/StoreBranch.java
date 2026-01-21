@@ -47,7 +47,7 @@ public class StoreBranch {
     }
 
     private void generateCustomers(int count) {
-        String[] names = { "John", "Sarah", "Mike", "Emma", "David", "Lisa", "Tom", "Anna", "James", "Maria" };
+        String[] names = { "Anna", "Almog", "Oded", "Dan", "Aviv", "Shahaf", "Roey", "Nevo", "Itay", "Menahem" };
         for (int i = 0; i < count; i++) {
             String name = names[(int) (Math.random() * names.length)];
             String id = "C" + (1000 + i);
