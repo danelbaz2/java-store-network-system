@@ -1,7 +1,7 @@
 package com.storemgmt.model.customer;
 
 import java.util.HashMap;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import com.storemgmt.model.product.Product;
 import com.storemgmt.utils.JsonLoader;
@@ -12,6 +12,7 @@ public abstract class Customer {
     private String phoneNum;
     private HashMap<Product, Integer> shoppingList = new HashMap<Product, Integer>();
 
+    // force subclass to implement this method
     public abstract double getDiscount();
 
     public Customer(String fullName, String id, String phoneNum) {
@@ -21,15 +22,17 @@ public abstract class Customer {
         generateShoppingList();
     }
 
+    // generate random shopping list for customer
     private void generateShoppingList() {
-        Vector<String> productIds = new Vector<>(JsonLoader.getKeys("productCatalog"));
+        ArrayList<String> productIds = new ArrayList<>(JsonLoader.getKeys("productCatalog"));
         int range = (int) (Math.random() * productIds.size()) + 1;
 
+        // randomization
         for (int i = 0; i < range; i++) {
             int amount = (int) (Math.random() * 5) + 1;
             String productId = productIds.get((int) (Math.random() * productIds.size()));
             this.shoppingList.put(Product.getRandomProduct(productId), amount);
-            productIds.removeElement(productId);
+            productIds.remove(productId);
         }
     }
 

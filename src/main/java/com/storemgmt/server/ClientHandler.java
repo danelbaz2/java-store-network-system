@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,6 +93,7 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             System.out.println("Client disconnected: " + e.getMessage());
         } finally {
+            // closing the client, nevermind how it was disconnected
             cleanup();
         }
     }
@@ -393,6 +395,7 @@ public class ClientHandler implements Runnable {
 
         Customer customer;
         synchronized (branch) {
+            // get next customer from queue in a safe way
             customer = branch.getNextCustomer();
             if (customer == null) {
                 return "ERROR|No customers in queue";
@@ -401,6 +404,7 @@ public class ClientHandler implements Runnable {
 
         branch.setCashierBusy(cashierId, true);
 
+        // starting the run method of the customer handler
         CustomerHandler handler = new CustomerHandler(customer, branch, cashierId, this);
         branch.submitCustomerForCheckout(handler);
 
@@ -906,7 +910,7 @@ public class ClientHandler implements Runnable {
         synchronized (chatManagers) {
             List<String> managers = chatManagers.get(chatKey);
             if (managers == null) {
-                managers = new java.util.ArrayList<>();
+                managers = new ArrayList<>();
                 chatManagers.put(chatKey, managers);
             }
             managers.add(managerId);

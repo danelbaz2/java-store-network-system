@@ -23,6 +23,7 @@ public class CustomerHandler implements Runnable {
 
         try {
 
+            // simulating the time it takes to sell products
             Thread.sleep(2000 + (int) (Math.random() * 3000));
 
             double total = branch.sell(customer, cashierId);
@@ -34,6 +35,7 @@ public class CustomerHandler implements Runnable {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
+            // setting the cashier as available and notifying waiting employees
             branch.setCashierBusy(cashierId, false);
             clientHandler.notifyWaitingEmployees();
         }

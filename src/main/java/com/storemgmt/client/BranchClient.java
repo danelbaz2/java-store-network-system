@@ -51,6 +51,8 @@ public class BranchClient {
                             connected = false;
                             break;
                         }
+
+                        // handling chat requests from the server
                         if (line.startsWith("CHAT_REQUEST|")) {
                             String[] parts = line.split("\\|");
                             if (parts.length >= 3 && menu != null) {
@@ -80,6 +82,7 @@ public class BranchClient {
                             if (parts.length >= 2 && menu != null) {
                                 menu.onChatRequestPending(parts[1]);
                             }
+                            // if no chat request, just wake up the response lock
                         } else {
                             synchronized (responseLock) {
                                 pendingResponse = line;
@@ -101,6 +104,7 @@ public class BranchClient {
         }
     }
 
+    // sending a message to the server
     public String[] send(String message) {
         if (!connected) {
             return new String[] { "ERROR", "Not connected" };
@@ -116,12 +120,13 @@ public class BranchClient {
 
                 while (pendingResponse == null && connected) {
                     // Wait for the response of the server
-                    responseLock.wait(120000);
+                    responseLock.wait(120000); // 2 minutes timeout for debugging
                     if (pendingResponse == null) {
                         return new String[] { "ERROR", "Timeout" };
                     }
                 }
 
+                // parse the response
                 return parseResponse(pendingResponse);
             }
         } catch (InterruptedException e) {
@@ -136,9 +141,13 @@ public class BranchClient {
         if (line == null) {
             return new String[] { "ERROR", "No response" };
         }
+
+        // returning an array where each string is separated by | from the server
         return line.split("\\|");
     }
 
+    // helper method to get data from the response.
+    // Format: key:value|key:value|...
     public static HashMap<String, String> getData(String[] parts) {
         HashMap<String, String> data = new HashMap<>();
         for (int i = 1; i < parts.length; i++) {
@@ -150,6 +159,7 @@ public class BranchClient {
         return data;
     }
 
+    // on disconnect, closing all the streams and socket
     public void disconnect() {
         connected = false;
         try {

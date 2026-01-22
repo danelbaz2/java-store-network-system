@@ -11,11 +11,13 @@ import java.util.Set;
 
 public class ServerApp {
     public static void main(String[] args) {
+        // loading the config file
         JsonLoader.load(Paths.get(System.getProperty("user.dir"), "config.json").toString());
         int port = JsonLoader.getInt("server.port");
 
         Chain chain = generateChain();
 
+        // starting the server
         StoreServer server = new StoreServer(chain, port);
 
         server.start();
@@ -31,6 +33,7 @@ public class ServerApp {
         return chain;
     }
 
+    // generating the branches
     private static void GenerateBranches(Chain chain) {
         Set<String> branchKeys = JsonLoader.getKeys("branches");
 
@@ -42,9 +45,6 @@ public class ServerApp {
             GenerateEmployees(branch);
 
         }
-
-        System.out.println("Sample data created: " + branchKeys.size() + " branches loaded.");
-        System.out.println();
     }
 
     private static void GenerateEmployees(StoreBranch branch) {

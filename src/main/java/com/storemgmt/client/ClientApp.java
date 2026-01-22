@@ -11,6 +11,7 @@ public class ClientApp {
 
     public static void main(String[] args) {
 
+        // loading config.json file
         JsonLoader.load(Paths.get(System.getProperty("user.dir"), "config.json").toString());
 
         do {
@@ -28,7 +29,9 @@ public class ClientApp {
 
         BranchClient client = new BranchClient(host, port, branchId);
 
+        // connecting to server
         if (client.connect()) {
+            // creating the menu for the client
             BranchMenu menu = new BranchMenu(client);
 
             try {
@@ -46,14 +49,16 @@ public class ClientApp {
 
     private static boolean isBranchIdValid(String branchId) {
         if (branchId == null || branchId.isEmpty()) {
-            System.out.println("Branch ID: " + branchId + " is invalid.");
+            System.out.println("Branch ID cannot be empty.");
             return false;
         }
-        if (JsonLoader.getKeys("branches").contains(branchId)) {
-            System.out.println("Branch ID: " + branchId + " is valid.");
-            return true;
+
+        if (!JsonLoader.getKeys("branches").contains(branchId)) {
+            System.out.println("Branch ID: " + branchId + " does not exist.");
+            return false;
         }
-        System.out.println("Branch ID: " + branchId + " is invalid.");
-        return false;
+
+        System.out.println("Branch ID: " + branchId + " is valid.");
+        return true;
     }
 }

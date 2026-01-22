@@ -66,6 +66,7 @@ public abstract class Product {
         }
     }
 
+    // we need to override equals and hashcode to compare products by type and brand
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -73,10 +74,12 @@ public abstract class Product {
         if (o == null || getClass() != o.getClass())
             return false;
 
+        // casting before comparison, and comparing the product type and brand
         Product product = (Product) o;
         return productType == product.productType && brand == product.brand;
     }
 
+    // contract for hashcode, based on product type and brand
     @Override
     public int hashCode() {
         return Objects.hash(productType, brand);

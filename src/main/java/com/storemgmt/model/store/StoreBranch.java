@@ -27,7 +27,7 @@ public class StoreBranch {
     private LinkedList<Employee> employees;
     private Map<Product, Integer> sellRecord;
     private Queue<Customer> customerQueue;
-    private static final int MAX_CASHIERS = 3;
+    private static final int MAX_CASHIERS = 3; // simulating 3 cashiers in a branch
     private ExecutorService cashierPool;
     private Map<String, Boolean> cashierBusyStatus;
     private Map<String, Double> cashierSales;
@@ -46,6 +46,7 @@ public class StoreBranch {
         generateCustomers(10);
     }
 
+    // generate customers for the store
     private void generateCustomers(int count) {
         String[] names = { "Anna", "Almog", "Oded", "Dan", "Aviv", "Shahaf", "Roey", "Nevo", "Itay", "Menahem" };
         for (int i = 0; i < count; i++) {
@@ -78,9 +79,11 @@ public class StoreBranch {
         return customerQueue;
     }
 
+    // initialize inventory for the store
     private void initializeInventory() {
         String inventoryPath = "branches." + branchId + ".inventory";
         try {
+            // get all products in the inventory from config.json file
             for (String productId : JsonLoader.getKeys(inventoryPath)) {
                 int stock = JsonLoader.getInt(inventoryPath + "." + productId + ".stock");
                 String catalogPath = "productCatalog." + productId;
@@ -100,6 +103,7 @@ public class StoreBranch {
         }
     }
 
+    // factory method to create products
     private Product createProduct(String productId, String type, BrandType brand, double price) {
         switch (type) {
             case "Jean":
@@ -119,7 +123,6 @@ public class StoreBranch {
             case "Sneaker":
                 return new Sneaker(productId, brand, price);
             default:
-                System.out.println("Unknown product type: " + type);
                 return null;
         }
     }
@@ -137,6 +140,7 @@ public class StoreBranch {
         for (Double sales : cashierSales.values()) {
             totalRevenue += sales;
         }
+        // format the report
         String result = "BRANCH REPORT: " + name;
         result += "|Total Sold: " + totalItems + " items";
         result += "|Revenue: $" + String.format("%.2f", totalRevenue);
@@ -144,6 +148,7 @@ public class StoreBranch {
         for (String cashierId : cashierSales.keySet()) {
             result += "|" + cashierId + ": $" + String.format("%.2f", cashierSales.get(cashierId));
         }
+        // save the report to json
         Map<Object, Object> salesMap = new HashMap<>();
         salesMap.put("totalItems", (double) totalItems);
         salesMap.put("totalRevenue", totalRevenue);
@@ -162,10 +167,12 @@ public class StoreBranch {
             int qty = sellRecord.get(p);
             categories.put(category, categories.getOrDefault(category, 0) + qty);
         }
+        // format the report
         String result = "CATEGORY REPORT: " + name;
         for (ProductType category : categories.keySet()) {
             result += "|" + category + ": " + categories.get(category) + " sold";
         }
+        // save the report to json
         Map<Object, Object> categoriesMap = new HashMap<>();
         categoriesMap.putAll(categories);
         saveReportToJson(categoriesMap, writer);
@@ -177,6 +184,7 @@ public class StoreBranch {
             saveReportToJson(new HashMap<>(), writer);
             return "PRODUCT REPORT: " + name + "|No sales yet.";
         }
+        // format the report
         String result = "PRODUCT REPORT: " + name;
         Map<Object, Object> productsMap = new HashMap<>();
         for (Product p : sellRecord.keySet()) {
@@ -184,11 +192,13 @@ public class StoreBranch {
             productsMap.put(p.getClass().getSimpleName(), qty);
             result += "|" + p.getClass().getSimpleName() + " (" + p.getBrand() + "): " + qty + " sold";
         }
+        // save the report to json
         saveReportToJson(productsMap, writer);
         return result;
     }
 
     public void saveReportToJson(Map<Object, Object> salesMap, FileWriter writer) {
+        // using \n format to make it readable
         try {
             writer.append("  {\n");
             writer.append("    \"Branch Name\": \"" + name + "\"");
@@ -248,6 +258,8 @@ public class StoreBranch {
         return sellRecord;
     }
 
+    // synchronized to prevent multiple threads from accessing the inventory
+    // and sell record at the same time
     public synchronized double sell(Customer customer, String cashierId) {
         System.out.println("---------------- START SELLING ----------------");
         double sum = 0;
@@ -299,11 +311,26 @@ public class StoreBranch {
         return cashierBusyStatus.getOrDefault(employeeId, false);
     }
 
+    // while cashier is selling, set the cashier to busy
     public void setCashierBusy(String employeeId, boolean busy) {
         cashierBusyStatus.put(employeeId, busy);
     }
 
+    // performing sell on customer
     public void submitCustomerForCheckout(Runnable customerHandler) {
+        int busyCount = 0;
+        for (Boolean busy : cashierBusyStatus.values()) {
+            if (busy)
+                busyCount++;
+        }
+
+        // if it's entering the if, it means all cashiers are busy and new cashier are
+        // queued until thread is available
+        if (busyCount > MAX_CASHIERS) {
+            System.out.println("All " + MAX_CASHIERS + " cashiers are busy");
+        }
+
+        // starting the run method of the customer handler
         cashierPool.execute(customerHandler);
     }
 

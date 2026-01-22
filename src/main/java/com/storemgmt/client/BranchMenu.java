@@ -62,6 +62,7 @@ public class BranchMenu {
 
         while (client.isConnected()) {
 
+            // if there is a pending chat request, handle it
             if (pendingChatRequest) {
                 handleIncomingChatSession(null);
                 continue;
@@ -81,6 +82,7 @@ public class BranchMenu {
                 continue;
             }
 
+            // switch case for the menu options
             switch (input) {
                 case "1":
                     viewInventory();
@@ -191,12 +193,16 @@ public class BranchMenu {
             return;
         }
 
+        // setting the chat mode and chat partner id
         client.setInChatMode(true);
         client.setChatPartnerId(partnerId);
+
+        // sending accept chat message to the server
         System.out.println("Type your messages, or press enter to end chat.\n");
         String acceptMsg = "ACCEPT_CHAT|" + client.getBranchId() + "|targetEmployeeId:" + partnerId;
         client.send(acceptMsg);
 
+        // while loop for the chat session
         while (!chatEnded && client.isConnected()) {
             String chatMessage = console.readLine();
 
@@ -222,6 +228,7 @@ public class BranchMenu {
             }
         }
 
+        // resetting the chat mode and chat partner id
         client.setInChatMode(false);
         client.setChatPartnerId(null);
         chatEnded = false;
@@ -362,6 +369,7 @@ public class BranchMenu {
         setAvailable(true);
     }
 
+    // decorator for setting the availability of the employee
     private void setAvailable(boolean available) {
         if (available)
             client.send("SET_AVAILABLE|" + client.getBranchId());

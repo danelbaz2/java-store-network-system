@@ -27,6 +27,7 @@ public class StoreServer {
         running = true;
 
         try {
+            // starting the server
             serverSocket = new ServerSocket(port);
             System.out.println("===========================================");
             System.out.println(" Store Server started on port " + port);
@@ -35,6 +36,7 @@ public class StoreServer {
 
             while (running) {
                 try {
+                    // accepting the client connection
                     Socket clientSocket = serverSocket.accept();
 
                     System.out.println("New client connected from: " + clientSocket.getInetAddress());
@@ -42,6 +44,7 @@ public class StoreServer {
                     ClientHandler handler = new ClientHandler(clientSocket, chain, this);
                     connectedClients.add(handler);
 
+                    // handling each client in a separate thread
                     Thread handlerThread = new Thread(handler);
                     handlerThread.start();
 
@@ -64,6 +67,7 @@ public class StoreServer {
                 branch.shutdown();
             }
 
+            // closing the server socket
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
             }
@@ -74,6 +78,7 @@ public class StoreServer {
         }
     }
 
+    // removing the client from the list
     public void removeClient(ClientHandler handler) {
         connectedClients.remove(handler);
         System.out.println("Client disconnected");
